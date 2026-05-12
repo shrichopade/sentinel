@@ -1,0 +1,359 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.tracker{padding:1rem 0}
+.progress-bar-wrap{background:var(--color-border-tertiary);border-radius:4px;height:6px;margin-bottom:1.5rem;overflow:hidden}
+.progress-bar-fill{height:6px;border-radius:4px;background:var(--color-text-success);transition:width .35s ease}
+.progress-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:6px;display:flex;justify-content:space-between}
+.phase{margin-bottom:1.5rem;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.phase-header{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;background:var(--color-background-secondary)}
+.phase-header:hover{background:var(--color-background-tertiary)}
+.phase-badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.phase-title{font-size:14px;font-weight:500;color:var(--color-text-primary);flex:1}
+.phase-chevron{width:14px;height:14px;transition:transform .2s;flex-shrink:0}
+.phase-chevron.open{transform:rotate(90deg)}
+.phase-body{border-top:0.5px solid var(--color-border-tertiary)}
+.task{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer}
+.task:last-child{border-bottom:none}
+.task:hover{background:var(--color-background-secondary)}
+.task.done .task-text{color:var(--color-text-tertiary);text-decoration:line-through}
+.task.done .task-detail{color:var(--color-text-tertiary)}
+.task-check{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--color-border-secondary);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.task.done .task-check{background:var(--color-background-success);border-color:var(--color-border-success)}
+.task-check svg{display:none}
+.task.done .task-check svg{display:block}
+.task-content{flex:1;min-width:0}
+.task-text{font-size:13px;color:var(--color-text-primary);line-height:1.45;font-weight:500}
+.task-detail{font-size:12px;color:var(--color-text-secondary);margin-top:3px;line-height:1.5}
+.task-code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:4px;padding:6px 8px;margin-top:6px;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-all}
+.phase-progress{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
+.tag{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;margin-right:4px;vertical-align:middle}
+.tag-ok{background:var(--color-background-success);color:var(--color-text-success)}
+.tag-warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.reset-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:5px 12px;cursor:pointer;margin-top:4px}
+.reset-btn:hover{background:var(--color-background-secondary)}
+</style>
+
+<h2 class="sr-only">PCGA Day 2 developer task checklist — step-by-step activities for building the orchestrator and sub-agents, with progress tracking</h2>
+
+<div class="tracker">
+  <div class="progress-label">
+    <span>Day 2 progress</span>
+    <span id="prog-text">0 of 0 tasks done</span>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
+  <div id="phases"></div>
+  <button class="reset-btn" onclick="resetAll()">Reset all</button>
+</div>
+
+<script>
+const phases = [
+  {
+    id:'p0',
+    label:'Start of day',
+    badge:'10 min',
+    badgeColor:'#D3D1C7',
+    badgeText:'#444441',
+    title:'Start-of-day checklist — before writing any new code',
+    tasks:[
+      {
+        text:'Confirm Day 1 checkpoint still works',
+        detail:'Both servers should still run cleanly. Before adding Day 2 code on top, verify your foundation is intact.',
+        code:'# Terminal 1 — backend (from pcga/backend/ with venv active):\nuvicorn api.main:app --reload\n\n# Terminal 2 — frontend (from pcga/frontend/):\nnpm start\n\n# Quick smoke test — should return {"status":"ok"}:\ncurl http://localhost:8000/health'
+      },
+      {
+        text:'Install one new Python dependency',
+        detail:'The Research Agent will use web search. The httpx library handles async HTTP calls cleanly with FastAPI.',
+        code:'# In backend/ with venv active:\npip install httpx'
+      },
+      {
+        text:'Create the agents folder files',
+        detail:'You will create three new files today. Create them now as empty files so your editor sees the structure.',
+        code:'# From pcga/backend/:\ntouch agents/orchestrator.py\ntouch agents/sub_agents.py\ntouch agents/step_logger.py\n\n# Also create the __init__.py files so Python treats these as modules:\ntouch agents/__init__.py'
+      }
+    ]
+  },
+  {
+    id:'p1',
+    label:'Hour 1',
+    badge:'~60 min',
+    badgeColor:'#CECBF6',
+    badgeText:'#3C3489',
+    title:'Orchestrator design — tool definitions + agentic loop',
+    tasks:[
+      {
+        text:'Understand what the orchestrator IS before writing it',
+        detail:'The orchestrator is NOT a special class or framework. It is a regular Claude API call that has been given a list of "tools" it can call. When Claude decides to use a tool, your Python code executes the corresponding sub-agent and feeds the result back. This back-and-forth is the "agentic loop". Read this comment block before writing anything.',
+        code:'# THE AGENTIC LOOP — concept:\n#\n# 1. You call Claude with a task + list of tool definitions\n# 2. Claude responds with stop_reason="tool_use" and names a tool\n# 3. Your code runs that tool (calls a sub-agent function)\n# 4. You add the tool result to the message history\n# 5. You call Claude again with the updated history\n# 6. Repeat until Claude says stop_reason="end_turn"\n#    OR you hit a safety limit (20 messages)\n#\n# Claude never directly calls your functions.\n# It just says "I want to call X with these arguments."\n# Your Python code does the actual calling.'
+      },
+      {
+        text:'Define the five orchestrator tools',
+        detail:'Open backend/agents/orchestrator.py. This list tells Claude what tools it has available. Each tool is a dict with a name, description, and input_schema. Claude reads the description to decide when to use the tool.',
+        code:'# backend/agents/orchestrator.py\n\nORCHESTRATOR_TOOLS = [\n    {\n        "name": "invoke_contract_analyst",\n        "description": "Analyse a document for risky clauses, missing protections, and obligations. Call this first for any new document.",\n        "input_schema": {\n            "type": "object",\n            "properties": {\n                "document_id": {"type": "string", "description": "The UUID of the document to analyse"},\n                "focus_areas": {"type": "array", "items": {"type": "string"}, "description": "e.g. [\'cancellation\', \'auto-renewal\', \'price increases\']"}\n            },\n            "required": ["document_id"]\n        }\n    },\n    {\n        "name": "invoke_research_agent",\n        "description": "Research current UK consumer rights, regulations, or statutory rates relevant to a finding.",\n        "input_schema": {\n            "type": "object",\n            "properties": {\n                "query": {"type": "string", "description": "What to research, e.g. \'UK cancellation rights for gym contracts\'"},\n                "jurisdiction": {"type": "string", "description": "GB, US, or EU", "default": "GB"}\n            },\n            "required": ["query"]\n        }\n    },\n    {\n        "name": "invoke_risk_scorer",\n        "description": "Score the overall risk of a document given analyst findings. Call after invoke_contract_analyst.",\n        "input_schema": {\n            "type": "object",\n            "properties": {\n                "findings": {"type": "array", "items": {"type": "object"}, "description": "The findings list from the contract analyst"},\n                "document_type": {"type": "string", "description": "e.g. subscription, employment, housing"}\n            },\n            "required": ["findings", "document_type"]\n        }\n    },\n    {\n        "name": "invoke_negotiation_drafter",\n        "description": "Draft a letter, complaint, or cancellation request based on findings.",\n        "input_schema": {\n            "type": "object",\n            "properties": {\n                "action_type": {"type": "string", "description": "cancel, complain, negotiate, gdpr_sar, or dispute"},\n                "context": {\n                    "type": "object",\n                    "description": "Dict containing vendor_name, findings, relevant_regulations, user_profile"\n                }\n            },\n            "required": ["action_type", "context"]\n        }\n    },\n    {\n        "name": "create_action_item",\n        "description": "Create a human-in-the-loop action item for the user to review and approve. Call this LAST after drafting a letter.",\n        "input_schema": {\n            "type": "object",\n            "properties": {\n                "severity": {"type": "string", "description": "low, medium, high, or critical"},\n                "title": {"type": "string", "description": "Short title, e.g. \'Auto-renewal clause detected\'"},\n                "summary": {"type": "string", "description": "One sentence summary of the issue"},\n                "draft_content": {"type": "string", "description": "The full draft letter text"},\n                "reasoning": {"type": "string", "description": "Agent\'s explanation of why this action is recommended"}\n            },\n            "required": ["severity", "title", "summary", "draft_content", "reasoning"]\n        }\n    }\n]'
+      },
+      {
+        text:'Write the orchestrator system prompt',
+        detail:'Add this constant below ORCHESTRATOR_TOOLS in orchestrator.py. The system prompt is what shapes the orchestrator\'s behaviour — it defines the order of operations and the stopping condition.',
+        code:'ORCHESTRATOR_SYSTEM = """You are a compliance agent analysing documents on behalf of a user.\n\nYour job is to:\n1. Call invoke_contract_analyst to identify risky clauses and obligations\n2. Call invoke_research_agent for any findings that need regulatory context\n3. Call invoke_risk_scorer to produce an overall risk score\n4. Call invoke_negotiation_drafter if the risk score is 4 or above\n5. Call create_action_item to write a HITL approval record — this is always your LAST call\n\nRules:\n- Always complete the full sequence before calling create_action_item\n- Never invent regulatory references not returned by the research agent\n- Be concise in your reasoning — one sentence per finding is enough\n- If risk score is below 4, still call create_action_item with severity=low\n"""'
+      },
+      {
+        text:'Write the agentic loop function',
+        detail:'Add this to orchestrator.py below the system prompt. This is the core engine. Read every line carefully — understanding this loop is the most important learning of the whole week.',
+        code:'import os, anthropic, json\nfrom dotenv import load_dotenv\nload_dotenv()\n\nclient = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))\n\nasync def orchestrate(trigger: dict, user_id: str = "dev") -> dict:\n    """\n    trigger should contain at minimum:\n      document_id: str\n      document_type: str  (e.g. "subscription")\n      vendor_name: str\n    """\n    working_memory = {\n        "trigger": trigger,\n        "steps": [],\n        "findings": [],\n        "risk_score": None,\n        "action_item": None\n    }\n\n    messages = [{\n        "role": "user",\n        "content": f"""Analyse this document for compliance issues.\n\nDocument ID: {trigger[\'document_id\']}\nDocument type: {trigger.get(\'document_type\', \'contract\')}\nVendor: {trigger.get(\'vendor_name\', \'Unknown\')}\n\nWork through the full analysis sequence.\"\"\"\n    }]\n\n    MAX_ITERATIONS = 10  # safety limit — prevents infinite loops\n    iteration = 0\n\n    while iteration < MAX_ITERATIONS:\n        iteration += 1\n\n        response = client.messages.create(\n            model="claude-sonnet-4-20250514",\n            max_tokens=2000,\n            system=ORCHESTRATOR_SYSTEM,\n            tools=ORCHESTRATOR_TOOLS,\n            messages=messages\n        )\n\n        # Add Claude\'s response to the message history\n        messages.append({"role": "assistant", "content": response.content})\n\n        if response.stop_reason == "end_turn":\n            # Claude is done — no more tool calls\n            break\n\n        if response.stop_reason == "tool_use":\n            # Claude wants to call one or more tools\n            tool_results = []\n\n            for block in response.content:\n                if block.type != "tool_use":\n                    continue\n\n                tool_name = block.name\n                tool_input = block.input\n                tool_use_id = block.id\n\n                print(f"  [Loop] Calling tool: {tool_name}")\n\n                # Execute the requested tool\n                result = await execute_tool(tool_name, tool_input, working_memory, user_id)\n\n                # Log the step\n                working_memory["steps"].append({\n                    "tool": tool_name,\n                    "input": tool_input,\n                    "output_summary": str(result)[:200]\n                })\n\n                tool_results.append({\n                    "type": "tool_result",\n                    "tool_use_id": tool_use_id,\n                    "content": json.dumps(result)\n                })\n\n            # Feed all tool results back into the conversation\n            messages.append({"role": "user", "content": tool_results})\n\n    return working_memory'
+      },
+      {
+        text:'Write the execute_tool dispatcher',
+        detail:'Add this function to orchestrator.py directly below the orchestrate() function. It routes each tool name to the correct sub-agent function. You will fill in the actual sub-agent functions in Hours 2–5.',
+        code:'async def execute_tool(tool_name: str, tool_input: dict, working_memory: dict, user_id: str) -> dict:\n    """Routes a tool call from the orchestrator to the correct sub-agent."""\n\n    # Import here to avoid circular imports\n    from agents.sub_agents import (\n        contract_analyst,\n        research_agent,\n        risk_scorer,\n        negotiation_drafter,\n        create_action_item\n    )\n\n    if tool_name == "invoke_contract_analyst":\n        result = await contract_analyst(\n            document_id=tool_input["document_id"],\n            focus_areas=tool_input.get("focus_areas", [])\n        )\n        # Store findings in working memory so other agents can use them\n        working_memory["findings"] = result.get("findings", [])\n        return result\n\n    elif tool_name == "invoke_research_agent":\n        return await research_agent(\n            query=tool_input["query"],\n            jurisdiction=tool_input.get("jurisdiction", "GB")\n        )\n\n    elif tool_name == "invoke_risk_scorer":\n        result = await risk_scorer(\n            findings=tool_input["findings"],\n            document_type=tool_input["document_type"]\n        )\n        working_memory["risk_score"] = result.get("score")\n        return result\n\n    elif tool_name == "invoke_negotiation_drafter":\n        return await negotiation_drafter(\n            action_type=tool_input["action_type"],\n            context=tool_input["context"]\n        )\n\n    elif tool_name == "create_action_item":\n        result = await create_action_item(\n            tool_input=tool_input,\n            user_id=user_id,\n            document_id=working_memory["trigger"]["document_id"]\n        )\n        working_memory["action_item"] = result\n        return result\n\n    else:\n        return {"error": f"Unknown tool: {tool_name}"}'
+      }
+    ]
+  },
+  {
+    id:'p2',
+    label:'Hours 2–3',
+    badge:'~120 min',
+    badgeColor:'#CECBF6',
+    badgeText:'#3C3489',
+    title:'Three morning sub-agents — contract analyst, research agent, risk scorer',
+    tasks:[
+      {
+        text:'Create the sub_agents.py file header and imports',
+        detail:'Open backend/agents/sub_agents.py. Add all imports at the top.',
+        code:'# backend/agents/sub_agents.py\nimport os, json, anthropic\nfrom openai import OpenAI\nfrom dotenv import load_dotenv\nfrom api.db import supabase\nload_dotenv()\n\nclient = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))\noai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))'
+      },
+      {
+        text:'Build the contract analyst sub-agent',
+        detail:'Add this function to sub_agents.py. It fetches the document text from Supabase, then calls Claude with a structured prompt asking for a findings list. Each finding is a dict with clause_text, risk_type, severity, explanation, and recommended_action.',
+        code:'async def contract_analyst(document_id: str, focus_areas: list = []) -> dict:\n    """\n    Fetches a document and returns a list of risk findings.\n    Each finding: {clause_text, risk_type, severity, explanation, recommended_action}\n    """\n    # Fetch document text from Supabase\n    result = supabase.table("documents")\\\n        .select("raw_text, vendor_name, doc_type, domain")\\\n        .eq("id", document_id)\\\n        .single()\\\n        .execute()\n\n    if not result.data:\n        return {"error": "Document not found", "findings": []}\n\n    doc = result.data\n    raw_text = doc["raw_text"] or ""\n\n    focus_str = ", ".join(focus_areas) if focus_areas else "all clauses"\n\n    prompt = f"""You are a consumer rights expert. Analyse this {doc[\'doc_type\']} from {doc[\'vendor_name\']}.\n\nFocus on: {focus_str}\n\nReturn ONLY a valid JSON object in this exact format:\n{{\n  "findings": [\n    {{\n      "clause_text": "exact quote from the document (max 100 chars)",\n      "risk_type": "auto_renewal|price_increase|cancellation|liability|data_sharing|hidden_fee|notice_period",\n      "severity": "low|medium|high|critical",\n      "explanation": "why this is a risk for the consumer (1-2 sentences)",\n      "recommended_action": "what the consumer should do (1 sentence)"\n    }}\n  ],\n  "summary": "overall 2-sentence summary of the document\'s consumer risk"\n}}\n\nDocument text (first 5000 chars):\n{raw_text[:5000]}"""\n\n    response = client.messages.create(\n        model="claude-sonnet-4-20250514",\n        max_tokens=1500,\n        messages=[{"role": "user", "content": prompt}]\n    )\n\n    try:\n        return json.loads(response.content[0].text)\n    except json.JSONDecodeError:\n        # If Claude returned something that isn\'t pure JSON, extract it\n        text = response.content[0].text\n        start = text.find("{")\n        end = text.rfind("}") + 1\n        if start >= 0 and end > start:\n            return json.loads(text[start:end])\n        return {"findings": [], "summary": "Could not parse analyst response"}'
+      },
+      {
+        text:'Build the research agent sub-agent',
+        detail:'Add this to sub_agents.py. This is the first sub-agent that uses an external tool (web search via the Anthropic API\'s built-in web_search tool). It returns regulatory context with sources.',
+        code:'async def research_agent(query: str, jurisdiction: str = "GB") -> dict:\n    """\n    Searches for relevant regulations and consumer rights.\n    Uses Claude\'s built-in web_search tool.\n    Returns: {regulations: [...], sources: [...], summary: str}\n    """\n    prompt = f"""Find current {jurisdiction} consumer rights regulations relevant to this query:\n\n"{query}"\n\nReturn a JSON object:\n{{\n  "regulations": [\n    {{\n      "name": "Regulation or Act name",\n      "section": "relevant section/article",\n      "relevance": "how this applies to the query (1 sentence)"\n    }}\n  ],\n  "sources": ["URL or citation 1", "URL or citation 2"],\n  "summary": "2-3 sentence plain English summary of what rights apply"\n}}\n\nFocus on practical, actionable rights. Jurisdiction: {jurisdiction}."""\n\n    response = client.messages.create(\n        model="claude-sonnet-4-20250514",\n        max_tokens=1000,\n        tools=[{"type": "web_search_20250305", "name": "web_search"}],\n        messages=[{"role": "user", "content": prompt}]\n    )\n\n    # The response may contain web_search tool_use blocks followed by a final text block\n    # We want the final text block which contains the synthesised answer\n    final_text = ""\n    for block in response.content:\n        if hasattr(block, "text"):\n            final_text = block.text\n\n    try:\n        start = final_text.find("{")\n        end = final_text.rfind("}") + 1\n        if start >= 0 and end > start:\n            return json.loads(final_text[start:end])\n    except:\n        pass\n\n    return {\n        "regulations": [],\n        "sources": [],\n        "summary": final_text[:500] if final_text else "No regulatory context found"\n    }'
+      },
+      {
+        text:'Build the risk scorer sub-agent',
+        detail:'Add to sub_agents.py. This is the simplest sub-agent — a synthesis step that takes the findings list and returns a numeric score. Keep it simple: no tools, just a short Claude call.',
+        code:'async def risk_scorer(findings: list, document_type: str) -> dict:\n    """\n    Scores overall document risk 0-10.\n    Returns: {score: int, severity: str, justification: str, top_risks: [str]}\n    """\n    if not findings:\n        return {"score": 0, "severity": "low", "justification": "No risks identified", "top_risks": []}\n\n    # Format findings as a simple list for the prompt\n    findings_text = "\\n".join([\n        f"- [{f.get(\'severity\', \'medium\')}] {f.get(\'risk_type\', \'unknown\')}: {f.get(\'explanation\', \'\')}"\n        for f in findings\n    ])\n\n    prompt = f"""Score the consumer risk of this {document_type} document.\n\nFindings:\n{findings_text}\n\nReturn ONLY a JSON object:\n{{\n  "score": 7,\n  "severity": "high",\n  "justification": "2 sentence plain English explanation of the score",\n  "top_risks": ["most important risk 1", "most important risk 2"]\n}}\n\nScoring guide:\n0-2: minimal risk (standard terms, no surprises)\n3-5: moderate risk (some problematic clauses)\n6-8: high risk (significant consumer protection concerns)\n9-10: critical risk (potentially unfair or illegal terms)"""\n\n    response = client.messages.create(\n        model="claude-sonnet-4-20250514",\n        max_tokens=400,\n        messages=[{"role": "user", "content": prompt}]\n    )\n\n    try:\n        text = response.content[0].text\n        start = text.find("{")\n        end = text.rfind("}") + 1\n        return json.loads(text[start:end])\n    except:\n        return {"score": 5, "severity": "medium", "justification": "Unable to parse score", "top_risks": []}'
+      },
+      {
+        text:'Quickly test these three sub-agents in a Python shell',
+        detail:'Before moving on to the drafter, run a quick sanity check. Grab a document_id from your Supabase documents table (open Table Editor and copy the UUID of the document you uploaded on Day 1).',
+        code:'# From pcga/backend/ with venv active:\npython\n\n>>> import asyncio\n>>> from agents.sub_agents import contract_analyst, risk_scorer\n\n>>> # Replace with a real UUID from your Supabase documents table\n>>> doc_id = "paste-your-document-uuid-here"\n\n>>> findings = asyncio.run(contract_analyst(doc_id))\n>>> print(f"Found {len(findings[\'findings\'])} issues")\n>>> print(findings[\'summary\'])\n\n>>> score = asyncio.run(risk_scorer(findings[\'findings\'], "subscription"))\n>>> print(f"Risk score: {score[\'score\']}/10 ({score[\'severity\']})")\n>>> print(score[\'justification\'])',
+        tag:'verify'
+      }
+    ]
+  },
+  {
+    id:'p3',
+    label:'Hours 4–5',
+    badge:'~120 min',
+    badgeColor:'#CECBF6',
+    badgeText:'#3C3489',
+    title:'Negotiation drafter + create_action_item — the two final sub-agents',
+    tasks:[
+      {
+        text:'Build the negotiation drafter sub-agent',
+        detail:'Add to sub_agents.py. This is the most user-visible sub-agent. The grounding rule — "only reference what\'s in the provided context" — is the hallucination guardrail. Never let it invent regulatory references.',
+        code:'async def negotiation_drafter(action_type: str, context: dict) -> dict:\n    """\n    Drafts a formal letter based on contract findings.\n    action_type: cancel | complain | negotiate | gdpr_sar | dispute\n    context: {vendor_name, findings, relevant_regulations, user_profile}\n    Returns: {letter: str, subject_line: str, tone: str}\n    """\n    vendor = context.get("vendor_name", "the company")\n    findings = context.get("findings", [])\n    regulations = context.get("relevant_regulations", {})\n    reg_summary = regulations.get("summary", "")\n\n    findings_text = "\\n".join([\n        f"- {f.get(\'risk_type\', \'\')}: {f.get(\'explanation\', \'\')}" \n        for f in findings[:5]  # cap at 5 to keep prompt focused\n    ])\n\n    action_descriptions = {\n        "cancel": "cancel the contract and request confirmation of cancellation",\n        "complain": "formally complain about unfair terms and request remediation",\n        "negotiate": "negotiate better terms citing consumer rights",\n        "gdpr_sar": "submit a Subject Access Request under UK GDPR Article 15",\n        "dispute": "dispute a charge or service failure"\n    }\n    action_desc = action_descriptions.get(action_type, action_type)\n\n    system_prompt = f"""You are drafting a {action_type} letter to {vendor} on behalf of a consumer.\n\nRules you MUST follow:\n1. Write in a firm, professional tone\n2. Reference only regulations provided in the context — do NOT invent legal references\n3. Include a clear 14-day deadline for the recipient to respond\n4. Mark any field the consumer must fill in as [PLACEHOLDER]\n5. Do NOT make legal threats you cannot substantiate from the provided context\n6. Keep the letter under 350 words\n\nThe consumer wants to: {action_desc}"""\n\n    user_prompt = f"""Draft the letter using ONLY this context:\n\nVendor: {vendor}\n\nIssues identified in the contract:\n{findings_text}\n\nApplicable consumer rights:\n{reg_summary}\n\nReturn a JSON object:\n{{\n  "subject_line": "Re: [action type] of [service] — [Your Name] — Account [PLACEHOLDER]",\n  "letter": "Dear [PLACEHOLDER],\\n\\n[full letter text]\\n\\nYours sincerely,\\n[Your Name]\\n[Your Address]\\n[Date: PLACEHOLDER]",\n  "tone": "formal|firm|assertive",\n  "placeholders_to_fill": ["list of PLACEHOLDER fields the user must complete"]\n}}"""\n\n    response = client.messages.create(\n        model="claude-sonnet-4-20250514",\n        max_tokens=1200,\n        system=system_prompt,\n        messages=[{"role": "user", "content": user_prompt}]\n    )\n\n    try:\n        text = response.content[0].text\n        start = text.find("{")\n        end = text.rfind("}") + 1\n        return json.loads(text[start:end])\n    except:\n        return {\n            "subject_line": f"Re: {action_type} request",\n            "letter": response.content[0].text,\n            "tone": "formal",\n            "placeholders_to_fill": []\n        }'
+      },
+      {
+        text:'Build the create_action_item function',
+        detail:'Add to sub_agents.py. This is the FINAL tool the orchestrator calls. It writes a row to the Supabase actions table — the pending HITL approval item the user will see in the UI.',
+        code:'async def create_action_item(tool_input: dict, user_id: str, document_id: str) -> dict:\n    """\n    Writes a pending action to the Supabase actions table.\n    This is the last step the orchestrator calls in every run.\n    Returns: {action_id: str, status: str}\n    """\n    row = {\n        "document_id": document_id,\n        "action_type": "review",  # Day 3 will add more specific types\n        "severity": tool_input.get("severity", "medium"),\n        "title": tool_input.get("title", "Action required"),\n        "summary": tool_input.get("summary", ""),\n        "draft_content": tool_input.get("draft_content", ""),\n        "status": "pending",\n        "reasoning": tool_input.get("reasoning", ""),\n        "sources": []  # Day 3 adds source chunk linking\n    }\n\n    result = supabase.table("actions").insert(row).execute()\n\n    if result.data:\n        action_id = result.data[0]["id"]\n        print(f"  [Action] Created pending action: {action_id}")\n        return {"action_id": action_id, "status": "created", "severity": row["severity"]}\n    else:\n        return {"error": "Failed to create action item", "status": "error"}'
+      },
+      {
+        text:'Test the negotiation drafter in isolation',
+        detail:'Before wiring everything together, test the drafter directly. Use the findings from your earlier analyst test.',
+        code:'# In a Python shell from pcga/backend/:\nimport asyncio\nfrom agents.sub_agents import negotiation_drafter\n\ntest_context = {\n    "vendor_name": "TestGym Ltd",\n    "findings": [\n        {\n            "risk_type": "auto_renewal",\n            "explanation": "Contract auto-renews for 12 months without explicit notice"\n        }\n    ],\n    "relevant_regulations": {\n        "summary": "UK Consumer Contracts Regulations 2013 give consumers 14 days to cancel"\n    }\n}\n\nresult = asyncio.run(negotiation_drafter("cancel", test_context))\nprint(result["subject_line"])\nprint("---")\nprint(result["letter"][:500])'
+      }
+    ]
+  },
+  {
+    id:'p4',
+    label:'Hour 5 (cont.)',
+    badge:'~60 min',
+    badgeColor:'#CECBF6',
+    badgeText:'#3C3489',
+    title:'Step logger — log every orchestrator action to the database',
+    tasks:[
+      {
+        text:'Create the step logger module',
+        detail:'Open backend/agents/step_logger.py. This writes every tool call the orchestrator makes to the database. It feeds the Activity Log UI that you will build on Day 3.',
+        code:'# backend/agents/step_logger.py\nfrom api.db import supabase\nfrom datetime import datetime, timezone\n\ndef log_step(document_id: str, tool_name: str, summary: str, user_id: str = "dev"):\n    """\n    Writes a single orchestrator step to a log table.\n    Called after every tool execution in the agentic loop.\n    """\n    try:\n        supabase.table("agent_steps").insert({\n            "document_id": document_id,\n            "user_id": user_id,\n            "agent_name": "orchestrator",\n            "tool_called": tool_name,\n            "summary": summary[:500],\n            "created_at": datetime.now(timezone.utc).isoformat()\n        }).execute()\n    except Exception as e:\n        # Never let logging failure crash the orchestrator\n        print(f"  [Logger] Warning: could not write step log: {e}")'
+      },
+      {
+        text:'Create the agent_steps table in Supabase',
+        detail:'Go to Supabase SQL Editor and run this. This is a new table not in the Day 1 schema.',
+        code:'create table agent_steps (\n  id uuid primary key default gen_random_uuid(),\n  document_id uuid references documents(id) on delete cascade,\n  user_id text,\n  agent_name text,\n  tool_called text,\n  summary text,\n  created_at timestamptz default now()\n);'
+      },
+      {
+        text:'Wire step logging into the orchestrator loop',
+        detail:'Open backend/agents/orchestrator.py. Find the execute_tool call inside the while loop. Add the log_step call immediately after it.',
+        code:'# In orchestrator.py, inside the while loop, after:\n#   result = await execute_tool(...)\n# Add these two lines:\n\nfrom agents.step_logger import log_step\n\nlog_step(\n    document_id=working_memory["trigger"]["document_id"],\n    tool_name=tool_name,\n    summary=f"{tool_name}: {str(result)[:200]}",\n    user_id=user_id\n)\n\n# The full updated block in the while loop now looks like:\n#\n# result = await execute_tool(tool_name, tool_input, working_memory, user_id)\n# log_step(document_id=..., tool_name=tool_name, summary=..., user_id=user_id)\n# working_memory["steps"].append({...})\n# tool_results.append({...})'
+      }
+    ]
+  },
+  {
+    id:'p5',
+    label:'Hours 6–7',
+    badge:'~120 min',
+    badgeColor:'#CECBF6',
+    badgeText:'#3C3489',
+    title:'Wire /analyse endpoint + run end-to-end test',
+    tasks:[
+      {
+        text:'Add the /analyse endpoint to main.py',
+        detail:'Open backend/api/main.py. Add the import and new route below your existing /chat endpoint.',
+        code:'# Add at the top of main.py with the other imports:\nfrom agents.orchestrator import orchestrate\n\n# Add this new endpoint below the /chat endpoint:\n@app.post("/analyse")\nasync def analyse(document_id: str):\n    """\n    Triggers the orchestrator for a document that has already been ingested.\n    Call this after /ingest returns a doc_id.\n    """\n    # Fetch metadata needed to build the trigger\n    result = supabase.table("documents")\\\n        .select("id, vendor_name, doc_type, domain")\\\n        .eq("id", document_id)\\\n        .single()\\\n        .execute()\n\n    if not result.data:\n        return {"error": "Document not found"}\n\n    doc = result.data\n\n    trigger = {\n        "document_id": doc["id"],\n        "vendor_name": doc.get("vendor_name", "Unknown vendor"),\n        "document_type": doc.get("doc_type", "contract"),\n        "domain": doc.get("domain", "subscription")\n    }\n\n    print(f"\\n[/analyse] Starting orchestration for doc: {document_id}")\n    working_memory = await orchestrate(trigger)\n    print(f"[/analyse] Done. Steps taken: {len(working_memory[\'steps\'])}")\n\n    return {\n        "doc_id": document_id,\n        "steps_taken": len(working_memory["steps"]),\n        "risk_score": working_memory.get("risk_score"),\n        "action_item": working_memory.get("action_item"),\n        "findings_count": len(working_memory.get("findings", []))\n    }'
+      },
+      {
+        text:'You also need to import supabase in main.py',
+        detail:'The /analyse endpoint calls supabase directly to fetch the document. Add this import if it is not already there.',
+        code:'# At the top of backend/api/main.py, add:\nfrom api.db import supabase'
+      },
+      {
+        text:'Restart the backend server',
+        detail:'Because you added new files (orchestrator.py, sub_agents.py), the server needs a clean restart. Press Ctrl+C in Terminal 1, then restart.',
+        code:'# Terminal 1 — press Ctrl+C first, then:\nuvicorn api.main:app --reload\n\n# Watch the startup output for any import errors.\n# Common error: "ModuleNotFoundError: No module named \'agents\'"\n# Fix: make sure you created agents/__init__.py in the start-of-day step.'
+      },
+      {
+        text:'Run the full end-to-end test — this is the Day 2 checkpoint',
+        detail:'Step 1: get a document ID from Supabase Table Editor (copy the UUID from the documents table — use the same PDF you uploaded on Day 1, or upload a new one). Step 2: call /analyse. Watch the terminal output — you should see the orchestrator printing each tool call.',
+        code:'# Replace the UUID with your actual document id:\ncurl -X POST "http://localhost:8000/analyse?document_id=paste-your-doc-uuid-here"\n\n# Expected terminal output while running:\n#   [/analyse] Starting orchestration for doc: abc-123...\n#   [Loop] Calling tool: invoke_contract_analyst\n#   [Loop] Calling tool: invoke_research_agent\n#   [Loop] Calling tool: invoke_risk_scorer\n#   [Loop] Calling tool: invoke_negotiation_drafter\n#   [Loop] Calling tool: create_action_item\n#   [Action] Created pending action: xyz-456...\n#   [/analyse] Done. Steps taken: 5\n\n# Expected JSON response:\n# {\n#   "doc_id": "...",\n#   "steps_taken": 5,\n#   "risk_score": 7,\n#   "action_item": {"action_id": "...", "status": "created"},\n#   "findings_count": 4\n# }',
+        tag:'verify'
+      },
+      {
+        text:'Verify the actions row appeared in Supabase',
+        detail:'Go to Supabase Table Editor > actions. You should see one row with status="pending". Check that draft_content is not empty — it should contain the full draft letter. If the row is there, Day 2 is complete.',
+        tag:'verify'
+      },
+      {
+        text:'Verify agent_steps rows appeared in Supabase',
+        detail:'Go to Supabase Table Editor > agent_steps. You should see 5 rows — one for each tool the orchestrator called. These will power the Activity Log UI on Day 3.',
+        tag:'verify'
+      },
+      {
+        text:'(Optional) Trigger analysis automatically after ingest',
+        detail:'Currently /ingest and /analyse are separate calls. If you want the analysis to start automatically when a file is uploaded, update the /ingest endpoint in main.py to call orchestrate() as a background task after ingestion succeeds.',
+        code:'# In main.py, update the /ingest endpoint:\nfrom fastapi import BackgroundTasks\n\n@app.post("/ingest")\nasync def ingest(file: UploadFile = File(...), background_tasks: BackgroundTasks = None):\n    contents = await file.read()\n    result = await ingest_document(contents, file.filename)\n\n    # Kick off analysis in the background so /ingest returns immediately\n    if background_tasks and result.get("doc_id"):\n        doc_id = result["doc_id"]\n        doc_meta = supabase.table("documents")\\\n            .select("vendor_name, doc_type, domain")\\\n            .eq("id", doc_id).single().execute().data or {}\n        trigger = {\n            "document_id": doc_id,\n            "vendor_name": doc_meta.get("vendor_name", "Unknown"),\n            "document_type": doc_meta.get("doc_type", "contract"),\n            "domain": doc_meta.get("domain", "subscription")\n        }\n        background_tasks.add_task(orchestrate, trigger)\n\n    return result'
+      }
+    ]
+  },
+  {
+    id:'p6',
+    label:'End of day',
+    badge:'15 min',
+    badgeColor:'#C0DD97',
+    badgeText:'#27500A',
+    title:'Wrap-up — confirm everything is ready for Day 3',
+    tasks:[
+      {
+        text:'Check your file structure matches the expected layout',
+        detail:'Run this from pcga/backend/ to confirm all the files you created today are present.',
+        code:'find . -name "*.py" | grep -v __pycache__ | grep -v venv | sort\n\n# Expected output should include:\n# ./agents/__init__.py\n# ./agents/orchestrator.py\n# ./agents/step_logger.py\n# ./agents/sub_agents.py\n# ./api/db.py\n# ./api/main.py\n# ./rag/chat.py\n# ./rag/ingestion.py\n# ./rag/retrieval.py'
+      },
+      {
+        text:'Confirm Supabase has data in all new tables',
+        detail:'Day 3 builds the HITL UI on top of these rows. If they are not there, Day 3 will have nothing to display. Quickly check each table.',
+        code:'# In Supabase Table Editor, confirm:\n# actions     — at least 1 row, status="pending", draft_content not empty\n# agent_steps — at least 5 rows from the orchestrator run\n# documents   — at least 1 row with a non-null vendor_name\n# chunks      — many rows, embedding column not null',
+        tag:'verify'
+      },
+      {
+        text:'Note down your document_id for use in Day 3',
+        detail:'Day 3 builds the Action Queue UI which will load actions by document. Keep this UUID handy.',
+        code:'# Run this to print all document IDs in your Supabase:\ncurl "http://localhost:8000/health"\n\n# Or just open Supabase Table Editor > documents\n# and copy the id column value for your test document.'
+      }
+    ]
+  }
+];
+
+let allTasks = [];
+phases.forEach(p => p.tasks.forEach((t,i) => allTasks.push({phase: p.id, idx: i})));
+const total = allTasks.length;
+
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem('pcga_d2') || '[]')); } catch(e){}
+
+function save() {
+  try { localStorage.setItem('pcga_d2', JSON.stringify([...done])); } catch(e){}
+}
+
+function updateProgress() {
+  const n = done.size;
+  document.getElementById('prog-text').textContent = `${n} of ${total} tasks done`;
+  document.getElementById('prog-bar').style.width = `${Math.round(n/total*100)}%`;
+  phases.forEach(p => {
+    const pt = p.tasks.length;
+    const pd = p.tasks.filter((_,i) => done.has(p.id+'-'+i)).length;
+    const el = document.getElementById('pp-'+p.id);
+    if(el) el.textContent = `${pd}/${pt}`;
+  });
+}
+
+function toggleTask(phaseId, idx) {
+  const key = phaseId+'-'+idx;
+  if(done.has(key)) done.delete(key); else done.add(key);
+  save();
+  const el = document.getElementById('task-'+phaseId+'-'+idx);
+  if(el) el.classList.toggle('done', done.has(key));
+  updateProgress();
+}
+
+function togglePhase(id) {
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chev.classList.toggle('open', !open);
+}
+
+function resetAll() {
+  if(!confirm('Reset all Day 2 progress?')) return;
+  done.clear(); save();
+  document.querySelectorAll('.task').forEach(t => t.classList.remove('done'));
+  updateProgress();
+}
+
+function renderPhases() {
+  const container = document.getElementById('phases');
+  container.innerHTML = phases.map(p => {
+    const tasksHtml = p.tasks.map((t,i) => {
+      const key = p.id+'-'+i;
+      const isDone = done.has(key);
+      const codeHtml = t.code ? `<div class="task-code">${t.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : '';
+      const tagHtml = t.tag === 'verify' ? '<span class="tag tag-ok">verify</span>' : '';
+      return `<div class="task${isDone?' done':''}" id="task-${p.id}-${i}" onclick="toggleTask('${p.id}',${i})">
+        <div class="task-check">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4l3 3L9 1" stroke="var(--color-text-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="task-content">
+          <div class="task-text">${tagHtml}${t.text}</div>
+          ${t.detail?`<div class="task-detail">${t.detail}</div>`:''}
+          ${codeHtml}
+        </div>
+      </div>`;
+    }).join('');
+
+    const pt = p.tasks.length;
+    const pd = p.tasks.filter((_,i) => done.has(p.id+'-'+i)).length;
+
+    return `<div class="phase">
+      <div class="phase-header" onclick="togglePhase('${p.id}')">
+        <span class="phase-badge" style="background:${p.badgeColor};color:${p.badgeText}">${p.label}</span>
+        <span class="phase-title">${p.title}</span>
+        <span class="phase-progress" id="pp-${p.id}">${pd}/${pt}</span>
+        <svg class="phase-chevron open" id="chev-${p.id}" viewBox="0 0 14 14" fill="none">
+          <path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="phase-body" id="body-${p.id}">${tasksHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+renderPhases();
+updateProgress();
+</script>

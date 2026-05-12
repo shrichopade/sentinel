@@ -1,0 +1,13 @@
+Edit backend/agents/orchestrator.py.
+
+At the end of the orchestrate() function, just before the final "return working_memory" line, add the following logic:
+
+1. Import apply_guardrails from agents.guardrails at the top of the file.
+
+2. After the agentic loop exits, check if working_memory["action_item"] exists and has a "draft_content" field.
+
+3. If it does, pass the draft_content through apply_guardrails() with output_type set to "letter_draft". Store the sanitised content back into working_memory["action_item"]["draft_content"]. Also attach the warnings list and the escalate/escalation_reason fields from the guardrail output onto working_memory["action_item"].
+
+4. Also run apply_guardrails() on working_memory["findings"] if it exists — pass it as a dict with content = the summary field of each finding, output_type = "risk_assessment". Attach any warnings back to each finding dict.
+
+Do not change anything else in the orchestrator. The guardrail call should be a clean post-loop step, not inside the loop.

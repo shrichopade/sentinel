@@ -1,0 +1,702 @@
+---
+description: Sentinel.AI (PCGA) project context — stack, architecture, agents, RAG, guardrails, and build plan
+alwaysApply: true
+---
+
+# Sentinel.AI Project Context for Cursor AI
+
+## Project Overview
+You are helping build a **Personal Compliance & Governance Agent (Sentinel.AI)** — a production-style agentic system that helps users manage subscriptions, contracts, and compliance obligations automatically.
+
+**Core Value Proposition:** Reduce "admin debt" by autonomously monitoring documents, extracting obligations, identifying risks, and drafting action letters with human-in-the-loop approval before execution.
+
+**Build Timeline:** 5 focused days (35-40 hours) to create a working vertical slice
+
+**Target User Flow:**
+1. User uploads or syncs contract PDFs (gym membership, broadband, insurance)
+2. System automatically classifies, extracts obligations, identifies risks
+3. Agent drafts action letters (cancellation, negotiation, complaint)
+4. User reviews reasoning, edits draft, approves
+5. System sends the letter via email API
+
+---
+
+## Technical Stack Decisions
+
+### Backend
+- **Language:** Python
+- **Framework:** FastAPI (async support for agent orchestration)
+- **LLM:** Claude Sonnet 4 (`claude-sonnet-4-6`) via Anthropic API
+- **Vector Store:** Supabase pgvector (hybrid semantic + keyword search)
+- **Database:** Supabase (PostgreSQL with vector extension)
+- **Document Parsing:** PyMuPDF + Unstructured.io
+- **Email:** Resend API
+- **Scheduling:** APScheduler (for monitoring loop)
+
+### Frontend
+- **Framework:** React
+- **Styling:** Tailwind CSS
+- **State Management:** React hooks (useState, useContext)
+
+### External Integrations
+- **MCP:** Google Drive MCP (document ingestion)
+- **Tools:** Web search (Anthropic API), email sending (Resend)
+
+### Google Drive sync
+- **Design**: `POST /sync/drive` lists files in the configured Drive folder and ingests them automatically.
+- **Safety**: Drive access is restricted to a single folder via `DRIVE_FOLDER_ID` in `backend/.env`.
+
+### Deployment
+- **Week 1:** Local development only (no hosting/deployment complexity)
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     USER INTERFACES                          │
+│  Dashboard | Vault | Action Queue | Chat | Activity Log     │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────────┐
+│                   FASTAPI BACKEND                            │
+│  /ingest  /analyse  /chat  /actions/*  /sync/drive          │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+┌───────▼──────┐ ┌────▼─────┐ ┌─────▼──────┐
+│   RAG LAYER  │ │  AGENTS  │ │  MEMORY    │
+│              │ │          │ │            │
+│ • Ingestion  │ │ • Main   │ │ • Vector   │
+│ • Chunking   │ │ • Contract│ │ • Entity   │
+│ • Embedding  │ │   Analyst│ │ • Outcomes │
+│ • Retrieval  │ │ • Research│ │            │
+│              │ │ • Risk    │ │            │
+│              │ │   Scorer  │ │            │
+│              │ │ • Drafter │ │            │
+└──────────────┘ └──────────┘ └────────────┘
+        │              │              │
+        └──────────────┼──────────────┘
+                       │
+        ┌──────────────▼──────────────┐
+        │   SUPABASE DATABASE         │
+        │                             │
+        │  documents | chunks         │
+        │  obligations | actions      │
+        │  memory | regulatory_chunks │
+        └─────────────────────────────┘
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+┌───────▼──────┐ ┌────▼─────┐ ┌─────▼──────┐
+│   MCP (Drive)│ │ TOOLS    │ │ GUARDRAILS │
+│              │ │          │ │            │
+│ • Sync docs  │ │ • Web    │ │ • Citation │
+│ • Watch      │ │   search │ │ • PII      │
+│   folders    │ │ • Email  │ │ • Legal    │
+│              │ │   send   │ │   caveat   │
+└──────────────┘ └──────────┘ └────────────┘
+```
+
+---
+
+## Database Schema
+
+### Core Tables
+
+```sql
+-- Documents table
+CREATE TABLE documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  filename TEXT NOT NULL,
+  source TEXT, -- 'upload' | 'google_drive'
+  domain TEXT, -- 'subscription' | 'employment' | 'tax' | 'gdpr' | 'housing' | 'insurance'
+  doc_type TEXT, -- 'contract' | 'policy' | 'correspondence' | 'receipt'
+  vendor_name TEXT,
+  effective_date DATE,
+  expiry_date DATE,
+  jurisdiction TEXT, -- 'GB' | 'US' | 'EU'
+  risk_score INTEGER, -- 0-10
+  status TEXT, -- 'processing' | 'active' | 'expired' | 'actioned'
+  raw_text TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Chunks table (for RAG)
+CREATE TABLE chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  embedding vector(1024), -- Voyage voyage-4-large dimension
+  chunk_index INTEGER,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Obligations table
+CREATE TABLE obligations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  obligation_type TEXT, -- 'renewal' | 'cancellation_window' | 'payment' | 'notice'
+  due_date DATE,
+  description TEXT,
+  status TEXT, -- 'pending' | 'completed' | 'missed'
+  financial_amount DECIMAL(10,2),
+  currency TEXT DEFAULT 'GBP'
+);
+
+-- Actions table (HITL queue)
+CREATE TABLE actions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  action_type TEXT, -- 'cancel' | 'negotiate' | 'complain' | 'gdpr_sar' | 'dispute'
+  severity TEXT, -- 'low' | 'medium' | 'high' | 'critical'
+  title TEXT NOT NULL,
+  summary TEXT,
+  draft_content TEXT,
+  status TEXT DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected' | 'sent'
+  reasoning TEXT, -- agent's explanation
+  sources JSONB, -- cited chunks
+  created_at TIMESTAMP DEFAULT NOW(),
+  actioned_at TIMESTAMP
+);
+
+-- Memory table
+CREATE TABLE memory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  memory_type TEXT, -- 'vendor' | 'preference' | 'outcome'
+  key TEXT NOT NULL,
+  value JSONB,
+  embedding vector(1536),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Regulatory knowledge base
+CREATE TABLE regulatory_chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  regulation_name TEXT, -- 'Consumer Rights Act 2015'
+  jurisdiction TEXT, -- 'GB' | 'EU'
+  section TEXT,
+  content TEXT,
+  embedding vector(1536),
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- pgvector similarity search function
+CREATE OR REPLACE FUNCTION match_chunks(
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int,
+  filter_doc_ids uuid[] DEFAULT NULL
+)
+RETURNS TABLE (
+  id uuid,
+  document_id uuid,
+  content text,
+  chunk_index int,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    chunks.id,
+    chunks.document_id,
+    chunks.content,
+    chunks.chunk_index,
+    chunks.metadata,
+    1 - (chunks.embedding <=> query_embedding) AS similarity
+  FROM chunks
+  WHERE 
+    (filter_doc_ids IS NULL OR chunks.document_id = ANY(filter_doc_ids))
+    AND 1 - (chunks.embedding <=> query_embedding) > match_threshold
+  ORDER BY chunks.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+```
+
+---
+
+## Agent Orchestration Pattern
+
+### The Agentic Loop (Core Pattern)
+
+```python
+async def orchestrate(trigger: dict, user_id: str) -> dict:
+    """
+    Main orchestrator - delegates to sub-agents via tool use.
+    This is the most important pattern in the system.
+    """
+    working_memory = {
+        "trigger": trigger,
+        "steps": [],
+        "findings": []
+    }
+    
+    messages = [build_initial_prompt(trigger, user_id)]
+    
+    while True:
+        response = claude.messages.create(
+            model="claude-sonnet-4-6",
+            tools=ORCHESTRATOR_TOOLS,  # Sub-agents exposed as tools
+            messages=messages
+        )
+        
+        if response.stop_reason == "end_turn":
+            break
+            
+        if response.stop_reason == "tool_use":
+            # Extract tool calls from response
+            tool_calls = extract_tool_calls(response)
+            
+            # Execute each sub-agent
+            tool_results = await execute_tool_calls(
+                tool_calls, 
+                working_memory, 
+                user_id
+            )
+            
+            # Append results back to conversation
+            messages = append_tool_results(messages, response, tool_results)
+            working_memory["steps"].append(tool_calls)
+        
+        # Safety limit
+        if len(messages) > 20:
+            break
+    
+    return working_memory
+```
+
+### Sub-Agents as Tools
+
+```python
+ORCHESTRATOR_TOOLS = [
+    {
+        "name": "invoke_contract_analyst",
+        "description": "Analyse a document for risky clauses, missing protections, and obligations",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "document_id": {"type": "string"},
+                "focus_areas": {"type": "array", "items": {"type": "string"}}
+            },
+            "required": ["document_id"]
+        }
+    },
+    {
+        "name": "invoke_research_agent",
+        "description": "Research current regulations, consumer rights, or statutory rates",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "jurisdiction": {"type": "string"}
+            },
+            "required": ["query", "jurisdiction"]
+        }
+    },
+    {
+        "name": "invoke_risk_scorer",
+        "description": "Score overall risk given analyst and research findings",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "findings": {"type": "array"},
+                "document_type": {"type": "string"}
+            },
+            "required": ["findings", "document_type"]
+        }
+    },
+    {
+        "name": "invoke_negotiation_drafter",
+        "description": "Draft a letter, complaint, or cancellation request",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action_type": {"type": "string"},
+                "context": {"type": "object"}
+            },
+            "required": ["action_type", "context"]
+        }
+    },
+    {
+        "name": "create_action_item",
+        "description": "Create a HITL action item for user review",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "severity": {"type": "string"},
+                "title": {"type": "string"},
+                "draft": {"type": "string"},
+                "reasoning": {"type": "string"}
+            },
+            "required": ["severity", "title", "draft", "reasoning"]
+        }
+    }
+]
+```
+
+---
+
+## RAG Implementation Pattern
+
+### Document Ingestion Pipeline
+
+```python
+async def ingest_document(file_path: str, user_id: str) -> dict:
+    """
+    Sequential pipeline: extract → classify → chunk → embed → store
+    """
+    # 1. Extract raw text
+    raw_text = extract_text(file_path)  # PyMuPDF
+    
+    # 2. Classify document (Claude call #1 - structured output)
+    metadata = await classify_document(raw_text)
+    # Returns: domain, doc_type, vendor_name, dates, summary
+    
+    # 3. Chunk document (hybrid: fixed 512 tokens + semantic boundaries)
+    chunks = chunk_document(raw_text, metadata)
+    
+    # 4. Embed chunks (text-embedding-3-small)
+    embeddings = await embed_chunks(chunks)
+    
+    # 5. Store document and chunks
+    doc_id = await store_document(metadata, raw_text, user_id)
+    await store_chunks(doc_id, chunks, embeddings)
+    
+    # 6. Extract obligations (Claude call #2 - structured output)
+    obligations = await extract_obligations(raw_text, metadata)
+    await store_obligations(doc_id, obligations)
+    
+    return {
+        "doc_id": doc_id,
+        "metadata": metadata,
+        "obligations": obligations
+    }
+```
+
+### Hybrid Retrieval
+
+```python
+async def retrieve(query: str, user_id: str, filters: dict = {}) -> list:
+    """
+    Combine semantic search + keyword search for robust retrieval
+    """
+    # Semantic search via pgvector
+    query_embedding = await embed(query)
+    semantic_results = await supabase.rpc('match_chunks', {
+        'query_embedding': query_embedding,
+        'match_threshold': 0.7,
+        'match_count': 10,
+        'filter': filters  # domain, doc_type, date_range
+    })
+    
+    # Keyword fallback (important for dates, amounts, names)
+    keyword_results = await supabase.from_('chunks') \
+        .text_search('content', query) \
+        .limit(5)
+    
+    # Rerank combined results
+    return rerank(semantic_results + keyword_results, query)
+```
+
+---
+
+## Critical Implementation Rules
+
+### 1. Grounding and Citations
+**Every agent output must be grounded in retrieved context:**
+```python
+system_prompt = """
+You are drafting a cancellation letter.
+
+CRITICAL GROUNDING RULE:
+- Only reference clauses, terms, or rights present in the provided context
+- Do NOT invent clause numbers or contract terms
+- If information is missing, state [PLACEHOLDER - USER TO VERIFY]
+- Every factual claim must cite a source chunk or regulation
+
+Context provided:
+{context}
+"""
+```
+
+### 2. Guardrails Layer
+**Post-process ALL agent outputs before showing to user:**
+```python
+async def apply_guardrails(output: dict, output_type: str) -> dict:
+    # 1. Citation check
+    uncited = find_uncited_claims(output["content"])
+    if uncited:
+        output["warnings"].append("Some claims lack source verification")
+    
+    # 2. Legal caveat injection
+    if output_type in ["risk_assessment", "letter_draft"]:
+        output["content"] += LEGAL_CAVEAT
+    
+    # 3. PII detection and redaction
+    pii_found = detect_pii(output["content"])
+    if pii_found:
+        output["content"] = redact_pii(output["content"])
+        output["warnings"].append("Sensitive data redacted")
+    
+    return output
+```
+
+### 3. HITL Double-Confirmation
+**High-stakes write actions require explicit approval:**
+```python
+# Never send email directly from agent
+# Always create action item first
+
+await create_action_item({
+    "severity": "high",
+    "action_type": "cancel",
+    "draft_content": letter_text,
+    "reasoning": "Cancellation window closes in 8 days",
+    "status": "pending"  # User must approve
+})
+
+# Only after user approves in UI:
+await send_email_action(action_id)
+```
+
+### 4. Structured Output from Claude
+**Use typed schemas for reliable parsing:**
+```python
+# For classification
+classification_prompt = """
+Analyze this document and return ONLY valid JSON:
+
+{
+  "domain": "subscription" | "employment" | "tax" | "gdpr" | "housing" | "insurance",
+  "doc_type": "contract" | "policy" | "correspondence" | "receipt",
+  "vendor_name": string,
+  "effective_date": "YYYY-MM-DD" | null,
+  "expiry_date": "YYYY-MM-DD" | null,
+  "jurisdiction": "GB" | "US" | "EU",
+  "summary": string (max 2 sentences),
+  "flagged_clause_count": integer
+}
+"""
+```
+
+### 5. Memory Integration
+**Query memory at task start:**
+```python
+async def orchestrate(trigger: dict, user_id: str):
+    # Augment with long-term memory
+    vendor = trigger.get("vendor_name")
+    vendor_history = await memory.recall_vendor_history(vendor)
+    user_preferences = await memory.recall_relevant_preferences(trigger["domain"])
+    
+    context = {
+        "trigger": trigger,
+        "vendor_history": vendor_history,  # "Raised prices 8 months ago"
+        "user_preferences": user_preferences  # "Prefers negotiation over cancellation"
+    }
+```
+
+---
+
+## 5-Day Build Breakdown
+
+### Day 1: RAG Foundation
+**Deliverable:** Upload PDF → chat with cited answers
+
+**Tasks:**
+1. Project scaffold + environment setup
+2. Supabase schema creation
+3. Document ingestion pipeline
+4. RAG retrieval layer
+5. Basic chat endpoint
+6. Frontend: Document Vault + Chat UI
+
+**Success Criteria:** Ask "When does this contract expire?" and get cited answer
+
+---
+
+### Day 2: Orchestrator & Sub-Agents
+**Deliverable:** Automatic analysis produces risk score + draft letter
+
+**Tasks:**
+1. Orchestrator design (agentic loop)
+2. Three sub-agents (Analyst, Research, Risk Scorer)
+3. Negotiation Drafter sub-agent
+4. Wire up `/analyse` endpoint
+5. Log all steps to database
+
+**Success Criteria:** Upload contract → automatic analysis → pending action created with draft letter
+
+---
+
+### Day 3: HITL & Guardrails
+**Deliverable:** Full approval flow with email sending
+
+**Tasks:**
+1. Guardrail layer implementation
+2. HITL action queue backend
+3. Action Queue UI
+4. Activity Log UI
+5. Email sending integration
+
+**Success Criteria:** Review action → edit draft → approve → real email sent
+
+---
+
+### Day 4: Memory & Monitoring
+**Deliverable:** Auto-ingestion from Drive + background monitoring
+
+**Tasks:**
+1. Long-term memory module
+2. Google Drive MCP integration
+3. Monitoring loop (deadlines, new docs)
+4. Dashboard UI
+
+**Success Criteria:** Drive sync works, monitoring creates deadline alerts, Dashboard shows data
+
+---
+
+### Day 5: Integration & Polish
+**Deliverable:** Complete end-to-end demo
+
+**Tasks:**
+1. Regulatory knowledge base (UK laws)
+2. Memory integration into orchestrator
+3. Skills library consolidation
+4. End-to-end testing
+5. Demo flow preparation
+
+**Success Criteria:** New user can connect Drive → ingest contracts → see dashboard → approve action → send letter in under 10 minutes
+
+---
+
+## Key Coding Patterns to Use
+
+### Environment Variables
+```python
+# .env
+ANTHROPIC_API_KEY=sk-...
+SUPABASE_URL=https://...
+SUPABASE_KEY=...
+RESEND_API_KEY=re_...
+GOOGLE_DRIVE_MCP_URL=https://...
+```
+
+### Error Handling for LLM Calls
+```python
+async def call_claude_with_retry(messages, tools=None, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4096,
+                tools=tools,
+                messages=messages
+            )
+            return response
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            await asyncio.sleep(2 ** attempt)  # Exponential backoff
+```
+
+### Async Batch Processing
+```python
+async def process_multiple_documents(file_paths: list) -> list:
+    """Process documents in parallel for speed"""
+    tasks = [ingest_document(fp, user_id) for fp in file_paths]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return [r for r in results if not isinstance(r, Exception)]
+```
+
+---
+
+## What NOT to Build (Out of Scope for Week 1)
+
+- Deployment/hosting infrastructure
+- User authentication (assume single user)
+- Stripe/payment integration
+- Mobile apps
+- Real-time streaming UI updates
+- Multi-user support
+- Advanced memory consolidation
+- Comprehensive test suite
+- Production monitoring/logging infrastructure
+
+**Focus:** Build the architectural skeleton with every major layer working end-to-end on a narrow use case.
+
+---
+
+## Success Metrics
+
+**By end of Day 5, you should have:**
+- ✅ Document intelligence pipeline (classify, extract, embed)
+- ✅ Personal RAG store (hybrid retrieval working)
+- ✅ Multi-corpus RAG (personal docs + regulatory knowledge)
+- ✅ Orchestrator with live agentic loop
+- ✅ Four working sub-agents
+- ✅ Skills library (6 reusable modules)
+- ✅ Short-term working memory
+- ✅ Long-term memory (vendor history, preferences)
+- ✅ Google Drive MCP integration
+- ✅ Three external tools (web search, email, DB)
+- ✅ Guardrail layer (citation, PII, caveats)
+- ✅ Tiered HITL (double-confirmation)
+- ✅ Ambient monitoring loop
+- ✅ Five UI surfaces (Dashboard, Vault, Queue, Chat, Log)
+
+**This is a genuinely production-style agentic system** — not a demo, but a working vertical slice that demonstrates every architectural pattern needed for serious agent systems.
+
+---
+
+## When You Get Stuck
+
+**Common Issues & Solutions:**
+
+1. **RAG retrieval returning irrelevant results**
+   - Check chunk size (512 tokens is good default)
+   - Verify embedding model consistency
+   - Add keyword fallback for dates/amounts
+   - Lower similarity threshold if too strict
+
+2. **Agent hallucinating citations**
+   - Strengthen grounding prompt
+   - Add citation verification in guardrails
+   - Require source chunk IDs in output schema
+
+3. **Orchestrator infinite loop**
+   - Add step counter limit (max 20 steps)
+   - Require explicit "task_complete" tool call
+   - Log each step for debugging
+
+4. **Tool calls not executing**
+   - Verify tool schema matches exactly
+   - Check for missing required fields
+   - Test tool in isolation first
+
+5. **Memory not influencing decisions**
+   - Verify memory is queried before orchestrator starts
+   - Check embedding quality for semantic search
+   - Add explicit memory context to system prompt
+
+---
+
+## Final Reminders
+
+- **Ship iteratively:** Get each day's checkpoint working before moving on
+- **Log everything:** Activity logging is your debug tool
+- **Test with real documents:** Use your own contracts, not synthetic data
+- **Don't over-engineer:** Week 1 is about architectural completeness, not polish
+- **Document assumptions:** Note design decisions for future refactoring
+
+**The goal is learning, not perfection.** Every architectural pattern you build this week transfers directly to any production agent system you build next.

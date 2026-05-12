@@ -1,0 +1,30 @@
+Create the file frontend/src/pages/ActionQueue.jsx for the PCGA project.
+
+This is a React page component. The project uses React hooks and Tailwind CSS for styling. The API base URL is http://localhost:8000.
+
+Requirements:
+
+State:
+- actions: array of action summary objects (initially empty)
+- loading: boolean
+- error: string or null
+- successMessage: string or null (shown as a green banner after a send succeeds)
+
+On mount:
+- Call GET /actions via axios
+- Store the results in the actions state
+- Show a loading spinner while fetching (a simple "Loading..." text is fine)
+- Show an error message if the fetch fails
+
+Sorting:
+- Sort actions by severity before rendering: critical first, then high, medium, low
+- Define a severity order map at the top of the component: {critical:0, high:1, medium:2, low:3}
+
+Rendering:
+- Show a page heading "Action queue" (h1, text-2xl font-medium)
+- If actions is empty after loading, show: "No pending actions. The system is up to date."
+- If actions has items, render an ActionCard component for each (import from ../components/ActionCard)
+- Pass a callback prop onStatusChange to each ActionCard — when called, re-fetch the actions list
+- Show successMessage as a green banner at the top if it is set (auto-dismiss after 4 seconds using useEffect)
+
+Export the component as default.

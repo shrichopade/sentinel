@@ -1,0 +1,65 @@
+SUBJECT ACCESS REQUEST (SAR)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Submitted by : John Doe
+Email        : job_doe@youremail.com
+Address      : 102, High Street, Norwich, MW12 4GM
+SAR Reference: SAR-JD-20260322-001
+Date Sent    : 22 March 2026
+Sent To      : DataCorp Services Ltd, 12 Data House, London, EC1V 4PW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REQUEST TEXT:
+
+To the Data Protection Officer,
+
+I am writing to exercise my right of access under Article 15 of the UK General Data
+Protection Regulation (UK GDPR) and Section 45 of the Data Protection Act 2018.
+
+I request copies of all personal data that DataCorp Services Ltd holds about me,
+including but not limited to:
+
+  1. All personal data processed in relation to my account(s) and interactions.
+  2. The purposes for which my data is being processed.
+  3. The categories of personal data held.
+  4. Any third parties to whom my data has been or may be disclosed.
+  5. The retention period applied to my personal data.
+  6. Any automated decision-making or profiling applied to my data.
+  7. Information on the source of my data where not collected directly from me.
+
+I also request a copy of any internal notes, communications, or records linked to
+my account held since 1 January 2022.
+
+I have enclosed proof of identity (copy of photo ID) for verification purposes.
+
+Yours sincerely,
+John Doe
+job_doe@youremail.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESPONSE TRACKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SAR Submitted     : 22 March 2026
+Statutory Deadline: 21 April 2026  (30 calendar days under UK GDPR Art. 12(3))
+Status as of today: *** OVERDUE — NO RESPONSE RECEIVED (5 days past deadline) ***
+
+*** LEGAL POSITION ***
+
+The 30-day statutory response window has EXPIRED. DataCorp Services Ltd is now in
+breach of its obligations under Article 12(3) UK GDPR.
+
+Recommended immediate action: Submit a formal complaint to the Information
+Commissioner's Office (ICO) at ico.org.uk/make-a-complaint.
+
+The ICO can:
+  - Compel the organisation to comply with the SAR
+  - Issue a formal reprimand
+  - In serious cases, issue enforcement notices or financial penalties
+
+Draft complaint to ICO should reference:
+  - SAR reference: SAR-JD-20260322-001
+  - Date SAR submitted: 22 March 2026
+  - Deadline missed: 21 April 2026
+  - Days overdue: 5
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

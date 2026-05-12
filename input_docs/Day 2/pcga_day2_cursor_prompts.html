@@ -1,0 +1,779 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.wrap{padding:1rem 0}
+.phase-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.05em;text-transform:uppercase;margin:1.5rem 0 .5rem}
+.phase-label:first-child{margin-top:0}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:10px;overflow:hidden}
+.card-header{display:flex;align-items:flex-start;gap:10px;padding:11px 14px 10px;cursor:pointer;user-select:none}
+.card-header:hover{background:var(--color-background-secondary)}
+.badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;line-height:1.4}
+.card-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.chevron{width:14px;height:14px;flex-shrink:0;transition:transform .18s;margin-top:2px}
+.chevron.open{transform:rotate(90deg)}
+.card-body{border-top:0.5px solid var(--color-border-tertiary);padding:12px 14px}
+.prompt-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
+.prompt-box{font-family:var(--font-mono);font-size:11.5px;line-height:1.65;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px 12px;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+.copy-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.copy-btn:hover{background:var(--color-background-secondary)}
+.copy-btn.copied{color:var(--color-text-success);border-color:var(--color-border-success)}
+.tip{font-size:11px;color:var(--color-text-secondary);margin-top:8px;padding:7px 10px;background:var(--color-background-secondary);border-radius:6px;line-height:1.5}
+.tip strong{font-weight:500;color:var(--color-text-primary)}
+</style>
+
+<h2 class="sr-only">Cursor prompts for sentinel.ai Day 2 development tasks — orchestrator, sub-agents, step logger, and analyse endpoint — with copy buttons</h2>
+
+<div class="wrap">
+
+<div class="phase-label">Start of day — prep</div>
+
+<div class="card" id="c0">
+  <div class="card-header" onclick="tog('c0')">
+    <span class="badge" style="background:#D3D1C7;color:#444441">Prompt 0</span>
+    <div style="flex:1">
+      <div class="card-title">Create the agents folder and empty files</div>
+      <div class="card-sub">Scaffold the three new modules before writing any logic</div>
+    </div>
+    <svg class="chevron open" id="chev-c0" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c0">
+    <div class="prompt-label">Cursor prompt — paste into Cursor chat</div>
+    <div class="prompt-box" id="p0">In the sentinel.ai project, create the following empty files inside backend/agents/:
+
+- backend/agents/__init__.py  (empty — makes the folder a Python package)
+- backend/agents/orchestrator.py  (empty for now)
+- backend/agents/sub_agents.py  (empty for now)
+- backend/agents/step_logger.py  (empty for now)
+
+Also install one new Python dependency. Add "httpx" to the backend dependencies. Run:
+  pip install httpx
+
+from the backend/ folder with the virtual environment active.
+
+Do not write any logic yet — just create the files and confirm the folder structure is correct by listing backend/ contents.</div>
+    <button class="copy-btn" onclick="cp('p0',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>Do this first.</strong> Without __init__.py, Python will throw ModuleNotFoundError when the orchestrator tries to import from agents.sub_agents. Create all files before writing any code.</div>
+  </div>
+</div>
+
+<div class="phase-label">Hour 1 — orchestrator design</div>
+
+<div class="card" id="c1">
+  <div class="card-header" onclick="tog('c1')">
+    <span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/agents/orchestrator.py — tool definitions + system prompt</div>
+      <div class="card-sub">ORCHESTRATOR_TOOLS list and ORCHESTRATOR_SYSTEM constant</div>
+    </div>
+    <svg class="chevron open" id="chev-c1" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c1">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p1">Create the file backend/agents/orchestrator.py for the sentinel.ai project.
+
+This file defines the orchestrator — a Claude API call configured with tool use. The orchestrator does NOT execute tools itself; it decides which tool to call and your Python code executes it. This is the agentic loop pattern.
+
+Add the following at the top of the file:
+
+Imports:
+  import os, json, anthropic
+  from dotenv import load_dotenv
+  load_dotenv()
+  client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+Constant 1 — ORCHESTRATOR_TOOLS:
+A Python list of 5 tool definition dicts, each with "name", "description", and "input_schema". Use the exact names below — these are referenced by the dispatcher later.
+
+Tool 1: invoke_contract_analyst
+  description: "Analyse a document for risky clauses, missing consumer protections, and obligations. Always call this first for any new document."
+  input_schema: required fields: document_id (string). Optional: focus_areas (array of strings, e.g. ["cancellation", "auto-renewal", "price increases"]).
+
+Tool 2: invoke_research_agent
+  description: "Research current UK consumer rights, regulations, or statutory rates relevant to a finding. Use after contract analysis to find applicable law."
+  input_schema: required: query (string). Optional: jurisdiction (string, default "GB").
+
+Tool 3: invoke_risk_scorer
+  description: "Score the overall consumer risk of a document on a scale of 0-10, given analyst findings. Call after invoke_contract_analyst."
+  input_schema: required: findings (array of objects), document_type (string).
+
+Tool 4: invoke_negotiation_drafter
+  description: "Draft a letter on behalf of the consumer — cancellation, complaint, negotiation, GDPR SAR, or dispute. Call after risk scoring when score is 4 or above."
+  input_schema: required: action_type (string: one of cancel/complain/negotiate/gdpr_sar/dispute), context (object containing vendor_name, findings, relevant_regulations).
+
+Tool 5: create_action_item
+  description: "Create a human-in-the-loop action item for the user to review and approve. This is ALWAYS the last tool called in every orchestration run."
+  input_schema: required: severity (string: low/medium/high/critical), title (string, max 80 chars), summary (string, one sentence), draft_content (string, full letter text), reasoning (string, agent explanation).
+
+Constant 2 — ORCHESTRATOR_SYSTEM:
+A multiline string defining the orchestrator's behaviour:
+  - You are a compliance agent analysing documents on behalf of a UK consumer.
+  - Always work through this sequence: (1) invoke_contract_analyst, (2) invoke_research_agent for any finding needing regulatory context, (3) invoke_risk_scorer, (4) invoke_negotiation_drafter if risk score is 4 or above, (5) create_action_item — always last.
+  - Never invent regulatory references not returned by the research agent.
+  - If risk score is below 4, still call create_action_item with severity=low.
+  - Be concise — one sentence of reasoning per finding is sufficient.</div>
+    <button class="copy-btn" onclick="cp('p1',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="card" id="c2">
+  <div class="card-header" onclick="tog('c2')">
+    <span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 2</span>
+    <div style="flex:1">
+      <div class="card-title">Add the agentic loop to orchestrator.py</div>
+      <div class="card-sub">orchestrate() + execute_tool() dispatcher — the core loop pattern</div>
+    </div>
+    <svg class="chevron open" id="chev-c2" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c2">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p2">Add two functions to backend/agents/orchestrator.py. The file already has ORCHESTRATOR_TOOLS and ORCHESTRATOR_SYSTEM — append below them.
+
+Function 1: async def orchestrate(trigger: dict, user_id: str = "dev") -> dict
+
+This is the agentic loop. It calls Claude, checks the stop_reason, executes any requested tools, feeds results back, and repeats until Claude stops.
+
+The trigger dict always contains: document_id (str), vendor_name (str), document_type (str), domain (str).
+
+Implementation:
+  1. Build a working_memory dict: {"trigger": trigger, "steps": [], "findings": [], "risk_score": None, "action_item": None}
+  2. Build the initial messages list with a single user message telling Claude to analyse the document (include document_id, document_type, vendor_name from trigger).
+  3. Set MAX_ITERATIONS = 10 as a safety limit.
+  4. Enter a while loop (iteration < MAX_ITERATIONS):
+     a. Increment iteration counter.
+     b. Call client.messages.create() with model="claude-sonnet-4-20250514", max_tokens=2000, system=ORCHESTRATOR_SYSTEM, tools=ORCHESTRATOR_TOOLS, messages=messages.
+     c. Append the response to messages as: {"role": "assistant", "content": response.content}
+     d. If response.stop_reason == "end_turn": break
+     e. If response.stop_reason == "tool_use":
+        - Create an empty tool_results list.
+        - Loop over response.content. For each block where block.type == "tool_use":
+          * Print: f"  [Loop] Calling tool: {block.name}"
+          * Call result = await execute_tool(block.name, block.input, working_memory, user_id)
+          * Import and call log_step from agents.step_logger (document_id from trigger, tool_name=block.name, summary=str(result)[:200], user_id)
+          * Append to working_memory["steps"]: {"tool": block.name, "input": block.input, "output_summary": str(result)[:200]}
+          * Append to tool_results: {"type": "tool_result", "tool_use_id": block.id, "content": json.dumps(result)}
+        - Append to messages: {"role": "user", "content": tool_results}
+  5. After the loop, return working_memory.
+
+Function 2: async def execute_tool(tool_name: str, tool_input: dict, working_memory: dict, user_id: str) -> dict
+
+A dispatcher that routes each tool name to the correct sub-agent function. Import sub-agent functions inside the function body (not at the top of the file) to avoid circular imports.
+
+from agents.sub_agents import (contract_analyst, research_agent, risk_scorer, negotiation_drafter, create_action_item)
+
+Routing:
+- "invoke_contract_analyst" → call contract_analyst(document_id=tool_input["document_id"], focus_areas=tool_input.get("focus_areas", [])). Store result["findings"] into working_memory["findings"].
+- "invoke_research_agent" → call research_agent(query=tool_input["query"], jurisdiction=tool_input.get("jurisdiction", "GB"))
+- "invoke_risk_scorer" → call risk_scorer(findings=tool_input["findings"], document_type=tool_input["document_type"]). Store result["score"] into working_memory["risk_score"].
+- "invoke_negotiation_drafter" → call negotiation_drafter(action_type=tool_input["action_type"], context=tool_input["context"])
+- "create_action_item" → call create_action_item(tool_input=tool_input, user_id=user_id, document_id=working_memory["trigger"]["document_id"]). Store result into working_memory["action_item"].
+- Default: return {"error": f"Unknown tool: {tool_name}"}
+
+Each branch should return the result of the sub-agent call directly.</div>
+    <button class="copy-btn" onclick="cp('p2',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>This is the most important prompt of Day 2.</strong> Read the generated code carefully before moving on — make sure the while loop appends both the assistant response AND the tool results to the messages list. If either is missing, the loop will either run forever or produce wrong outputs.</div>
+  </div>
+</div>
+
+<div class="phase-label">Hours 2–3 — morning sub-agents</div>
+
+<div class="card" id="c3">
+  <div class="card-header" onclick="tog('c3')">
+    <span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 3</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/agents/sub_agents.py — file header + contract analyst</div>
+      <div class="card-sub">Imports, Anthropic/voyageai clients, contract_analyst() function</div>
+    </div>
+    <svg class="chevron open" id="chev-c3" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c3">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p3">Create the file backend/agents/sub_agents.py for the sentinel.ai project.
+
+This file contains all four sub-agent functions. Each sub-agent is a single async function that makes one or more Claude API calls and returns a structured dict.
+
+Start with the file header:
+
+Imports:
+  import os, json, anthropic
+  from voyageai import voyageai
+  from dotenv import load_dotenv
+  from api.db import supabase
+  load_dotenv()
+  client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+  voyageai = voyageai(api_key=os.getenv("voyageai_API_KEY"))
+
+Then implement the first sub-agent:
+
+async def contract_analyst(document_id: str, focus_areas: list = []) -> dict:
+  """
+  Fetches a document from Supabase and returns a structured list of risk findings.
+  Each finding: {clause_text, risk_type, severity, explanation, recommended_action}
+  """
+
+  Step 1: Fetch the document from Supabase.
+    Query the "documents" table for the row matching document_id.
+    Select: raw_text, vendor_name, doc_type, domain.
+    Use .single().execute(). If result.data is None or falsy, return {"error": "Document not found", "findings": [], "summary": ""}.
+
+  Step 2: Build the Claude prompt.
+    Create a focus_str: join focus_areas with ", " if non-empty, else use "all consumer risk areas".
+    Prompt Claude to act as a UK consumer rights expert analysing the document.
+    Ask it to return ONLY valid JSON in this exact structure:
+      {
+        "findings": [
+          {
+            "clause_text": "exact quote from document, max 100 characters",
+            "risk_type": "one of: auto_renewal | price_increase | cancellation | liability | data_sharing | hidden_fee | notice_period",
+            "severity": "one of: low | medium | high | critical",
+            "explanation": "why this is a risk for the consumer, 1-2 sentences",
+            "recommended_action": "what the consumer should do, 1 sentence"
+          }
+        ],
+        "summary": "2-sentence plain English summary of the document's overall consumer risk"
+      }
+    Include the first 5000 characters of raw_text in the prompt.
+    Focus on the focus_areas if provided.
+
+  Step 3: Call client.messages.create() with model="claude-sonnet-4-20250514", max_tokens=1500.
+
+  Step 4: Parse the response.
+    Try json.loads(response.content[0].text).
+    If that fails (JSONDecodeError), find the first "{" and last "}" in the text and parse that substring.
+    If parsing still fails, return {"findings": [], "summary": "Could not parse analyst response"}.
+
+  Return the parsed dict.</div>
+    <button class="copy-btn" onclick="cp('p3',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="card" id="c4">
+  <div class="card-header" onclick="tog('c4')">
+    <span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 4</span>
+    <div style="flex:1">
+      <div class="card-title">Add research_agent() to sub_agents.py</div>
+      <div class="card-sub">Web search tool via Anthropic API — returns regulations + sources</div>
+    </div>
+    <svg class="chevron open" id="chev-c4" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c4">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p4">Append the following function to backend/agents/sub_agents.py, below the contract_analyst function.
+
+async def research_agent(query: str, jurisdiction: str = "GB") -> dict:
+  """
+  Searches for regulations and consumer rights relevant to the query.
+  Uses Claude's built-in web_search tool — this is the first sub-agent to use an external tool.
+  Returns: {regulations: list, sources: list, summary: str}
+  """
+
+  Build a prompt that asks Claude to find current consumer rights regulations in the given jurisdiction relevant to the query. Ask it to return ONLY valid JSON:
+    {
+      "regulations": [
+        {
+          "name": "name of the Act or Regulation",
+          "section": "relevant section or article",
+          "relevance": "how this applies to the query, 1 sentence"
+        }
+      ],
+      "sources": ["URL or citation 1", "URL or citation 2"],
+      "summary": "2-3 sentence plain English summary of what rights apply"
+    }
+
+  Call client.messages.create() with:
+    - model="claude-sonnet-4-20250514"
+    - max_tokens=1000
+    - tools=[{"type": "web_search_20250305", "name": "web_search"}]
+    - messages=[{"role": "user", "content": prompt}]
+
+  The response.content will contain a mix of web_search tool_use blocks and text blocks. Extract the final text block by looping over response.content and keeping the last block where hasattr(block, "text") is True.
+
+  Parse the final text:
+    - Try finding "{" to "}" and json.loads() that substring.
+    - If parsing fails, return {"regulations": [], "sources": [], "summary": final_text[:500] if final_text else "No context found"}.
+
+  Return the parsed dict.</div>
+    <button class="copy-btn" onclick="cp('p4',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>Note on web_search:</strong> This uses Anthropic's built-in web search tool (type: "web_search_20250305"). It is billed per search call. For testing, limit the number of /analyse calls to keep costs low.</div>
+  </div>
+</div>
+
+<div class="card" id="c5">
+  <div class="card-header" onclick="tog('c5')">
+    <span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 5</span>
+    <div style="flex:1">
+      <div class="card-title">Add risk_scorer() to sub_agents.py</div>
+      <div class="card-sub">Synthesis step — score 0–10 with justification from findings list</div>
+    </div>
+    <svg class="chevron open" id="chev-c5" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c5">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p5">Append the following function to backend/agents/sub_agents.py, below the research_agent function.
+
+async def risk_scorer(findings: list, document_type: str) -> dict:
+  """
+  Scores the overall consumer risk of a document based on analyst findings.
+  Simple synthesis step — no tools, just a short Claude call.
+  Returns: {score: int (0-10), severity: str, justification: str, top_risks: list[str]}
+  """
+
+  Early exit: if findings is empty, return {"score": 0, "severity": "low", "justification": "No risk findings identified.", "top_risks": []}.
+
+  Format findings as a bullet list string:
+    For each finding in findings, produce: "- [{severity}] {risk_type}: {explanation}"
+
+  Build a prompt that asks Claude to score the consumer risk of this document_type. Provide the formatted findings. Ask it to return ONLY valid JSON:
+    {
+      "score": 7,
+      "severity": "high",
+      "justification": "2 sentence plain English explanation",
+      "top_risks": ["most urgent risk 1", "most urgent risk 2"]
+    }
+
+  Include this scoring guide in the prompt:
+    0–2: minimal (standard terms, no surprises)
+    3–5: moderate (some problematic clauses worth knowing)
+    6–8: high (significant consumer protection concerns)
+    9–10: critical (potentially unfair or unlawful terms)
+
+  Call client.messages.create() with model="claude-sonnet-4-20250514", max_tokens=400.
+
+  Parse response.content[0].text — extract JSON between first "{" and last "}". If parsing fails, return {"score": 5, "severity": "medium", "justification": "Score unavailable.", "top_risks": []}.</div>
+    <button class="copy-btn" onclick="cp('p5',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>Quick test after this prompt:</strong> Open a Python shell in backend/ and run: <code>import asyncio; from agents.sub_agents import contract_analyst, risk_scorer; findings = asyncio.run(contract_analyst("your-doc-uuid")); print(asyncio.run(risk_scorer(findings["findings"], "subscription")))</code>. You should see a score dict printed.</div>
+  </div>
+</div>
+
+<div class="phase-label">Hours 4–5 — afternoon sub-agents</div>
+
+<div class="card" id="c6">
+  <div class="card-header" onclick="tog('c6')">
+    <span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 6</span>
+    <div style="flex:1">
+      <div class="card-title">Add negotiation_drafter() to sub_agents.py</div>
+      <div class="card-sub">Grounded letter drafting — hallucination guardrail built into prompt</div>
+    </div>
+    <svg class="chevron open" id="chev-c6" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c6">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p6">Append the following function to backend/agents/sub_agents.py, below the risk_scorer function.
+
+async def negotiation_drafter(action_type: str, context: dict) -> dict:
+  """
+  Drafts a formal letter to the vendor on behalf of the consumer.
+  action_type: one of cancel | complain | negotiate | gdpr_sar | dispute
+  context: dict containing vendor_name, findings (list), relevant_regulations (dict with "summary" key)
+  Returns: {subject_line: str, letter: str, tone: str, placeholders_to_fill: list[str]}
+  """
+
+  Extract from context:
+    vendor = context.get("vendor_name", "the company")
+    findings = context.get("findings", [])
+    reg_summary = context.get("relevant_regulations", {}).get("summary", "")
+
+  Build a findings_text string — bullet list of up to 5 findings, each as "- {risk_type}: {explanation}".
+
+  Build an action description map:
+    cancel → "cancel the contract and request written confirmation"
+    complain → "formally complain about unfair terms and request remediation"
+    negotiate → "negotiate improved terms citing consumer rights"
+    gdpr_sar → "submit a Subject Access Request under UK GDPR Article 15"
+    dispute → "dispute a charge or service failure and request refund or remedy"
+
+  System prompt for Claude (use as the system= parameter):
+    You are drafting a {action_type} letter to {vendor} for a UK consumer.
+    Rules you MUST follow:
+    1. Professional, firm tone — not aggressive.
+    2. Reference ONLY regulations mentioned in the provided context. Do NOT invent legal references.
+    3. Include a 14-day deadline for the recipient to respond.
+    4. Mark every field the consumer must fill in as [PLACEHOLDER].
+    5. Keep the letter under 350 words.
+    6. Do not make legal threats not supported by the provided context.
+
+  User prompt:
+    The consumer wants to: {action_description}
+    Vendor: {vendor}
+    Issues found in the contract: {findings_text}
+    Applicable consumer rights: {reg_summary}
+
+    Return ONLY valid JSON:
+    {
+      "subject_line": "Re: [action] of [service name] — [Your Name] — Account [PLACEHOLDER]",
+      "letter": "Dear [PLACEHOLDER],\n\n[full letter body]\n\nYours sincerely,\n[Your Name]\n[Your Address]\n[Date: PLACEHOLDER]",
+      "tone": "one of: formal | firm | assertive",
+      "placeholders_to_fill": ["list every PLACEHOLDER field the consumer must complete before sending"]
+    }
+
+  Call client.messages.create() with model="claude-sonnet-4-20250514", max_tokens=1200, system=system_prompt, messages=[user message].
+
+  Parse response.content[0].text — extract JSON between first "{" and last "}".
+  If parsing fails, return {"subject_line": f"Re: {action_type}", "letter": response.content[0].text, "tone": "formal", "placeholders_to_fill": []}.</div>
+    <button class="copy-btn" onclick="cp('p6',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="card" id="c7">
+  <div class="card-header" onclick="tog('c7')">
+    <span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 7</span>
+    <div style="flex:1">
+      <div class="card-title">Add create_action_item() to sub_agents.py</div>
+      <div class="card-sub">Final tool — writes pending HITL row to Supabase actions table</div>
+    </div>
+    <svg class="chevron open" id="chev-c7" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c7">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p7">Append the following function to backend/agents/sub_agents.py, below the negotiation_drafter function.
+
+async def create_action_item(tool_input: dict, user_id: str, document_id: str) -> dict:
+  """
+  Writes a pending action to the Supabase actions table.
+  This is ALWAYS the last function called by the orchestrator.
+  Returns: {action_id: str, status: str, severity: str}
+  """
+
+  Build the row dict to insert:
+    {
+      "document_id": document_id,
+      "action_type": "review",
+      "severity": tool_input.get("severity", "medium"),
+      "title": tool_input.get("title", "Action required")[:200],
+      "summary": tool_input.get("summary", ""),
+      "draft_content": tool_input.get("draft_content", ""),
+      "status": "pending",
+      "reasoning": tool_input.get("reasoning", ""),
+      "sources": []
+    }
+
+  Call supabase.table("actions").insert(row).execute().
+
+  If result.data exists and is non-empty:
+    action_id = result.data[0]["id"]
+    Print: f"  [Action] Created pending action: {action_id}"
+    Return {"action_id": action_id, "status": "created", "severity": row["severity"]}
+
+  If result.data is empty or None:
+    Return {"error": "Failed to insert action item", "status": "error"}</div>
+    <button class="copy-btn" onclick="cp('p7',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="phase-label">Hour 5 (cont.) — step logger</div>
+
+<div class="card" id="c8">
+  <div class="card-header" onclick="tog('c8')">
+    <span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 8</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/agents/step_logger.py</div>
+      <div class="card-sub">Log every orchestrator tool call to the agent_steps table</div>
+    </div>
+    <svg class="chevron open" id="chev-c8" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c8">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p8">Create the file backend/agents/step_logger.py for the sentinel.ai project.
+
+This module writes a record to the database every time the orchestrator calls a tool. It feeds the Activity Log UI that will be built on Day 3.
+
+Imports:
+  from api.db import supabase
+  from datetime import datetime, timezone
+
+Implement one function:
+
+def log_step(document_id: str, tool_name: str, summary: str, user_id: str = "dev") -> None:
+  """
+  Writes a single orchestrator step to the agent_steps table.
+  Must never raise — a logging failure must not crash the orchestrator.
+  """
+
+  Wrap everything in a try/except block. On any exception, print the error with an [Logger] prefix and return without raising.
+
+  Inside the try block:
+    Insert a row into supabase.table("agent_steps") with:
+      document_id: document_id
+      user_id: user_id
+      agent_name: "orchestrator"
+      tool_called: tool_name
+      summary: summary[:500]  — truncate to 500 chars
+      created_at: datetime.now(timezone.utc).isoformat()
+
+    Call .execute() on the insert. Do not await it — the Supabase Python client is synchronous.
+
+Also run this SQL in the Supabase SQL Editor to create the table (add as a comment at the top of the file so the developer knows to run it):
+
+  CREATE TABLE agent_steps (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id uuid REFERENCES documents(id) ON DELETE CASCADE,
+    user_id text,
+    agent_name text,
+    tool_called text,
+    summary text,
+    created_at timestamptz DEFAULT now()
+  );</div>
+    <button class="copy-btn" onclick="cp('p8',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>Remember to run the CREATE TABLE SQL in Supabase</strong> before testing /analyse. The step_logger silently swallows errors — if the table doesn't exist, you won't see a crash, but the agent_steps table will be empty.</div>
+  </div>
+</div>
+
+<div class="phase-label">Hours 6–7 — wire /analyse endpoint</div>
+
+<div class="card" id="c9">
+  <div class="card-header" onclick="tog('c9')">
+    <span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 9</span>
+    <div style="flex:1">
+      <div class="card-title">Add POST /analyse endpoint to main.py</div>
+      <div class="card-sub">Fetch doc metadata, build trigger, call orchestrate(), return summary</div>
+    </div>
+    <svg class="chevron open" id="chev-c9" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c9">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p9">Edit backend/api/main.py.
+
+Add the following to the existing FastAPI application. The file already has the health, /ingest, and /chat endpoints — add below them.
+
+New import at the top (if not already present):
+  from api.db import supabase
+  from agents.orchestrator import orchestrate
+
+New endpoint:
+
+@app.post("/analyse")
+async def analyse(document_id: str):
+  """
+  Triggers the orchestrator for a document that has already been ingested.
+  Call this after /ingest returns a doc_id.
+  """
+
+  Step 1: Fetch document metadata from Supabase.
+    Query the "documents" table for the row where id = document_id.
+    Select: id, vendor_name, doc_type, domain.
+    Use .single().execute().
+    If result.data is None or empty, return {"error": "Document not found"} with status code 404.
+
+  Step 2: Build the trigger dict.
+    trigger = {
+      "document_id": doc["id"],
+      "vendor_name": doc.get("vendor_name") or "Unknown vendor",
+      "document_type": doc.get("doc_type") or "contract",
+      "domain": doc.get("domain") or "subscription"
+    }
+
+  Step 3: Print a start message.
+    print(f"\n[/analyse] Starting orchestration for: {document_id}")
+
+  Step 4: Call the orchestrator.
+    working_memory = await orchestrate(trigger)
+
+  Step 5: Print a completion message.
+    print(f"[/analyse] Done. Steps taken: {len(working_memory['steps'])}")
+
+  Step 6: Return a summary response:
+    {
+      "doc_id": document_id,
+      "steps_taken": len(working_memory["steps"]),
+      "risk_score": working_memory.get("risk_score"),
+      "findings_count": len(working_memory.get("findings", [])),
+      "action_item": working_memory.get("action_item")
+    }
+
+Do not change any existing endpoints. Only add the new import lines and the new /analyse endpoint.</div>
+    <button class="copy-btn" onclick="cp('p9',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>End-of-day test:</strong> Restart the server and run: <code>curl -X POST "http://localhost:8000/analyse?document_id=YOUR-DOC-UUID"</code>. Watch the terminal — you should see 5 tool calls printed. The response should show steps_taken: 5 and a non-null action_item. Then check Supabase: the actions table should have a new "pending" row.</div>
+  </div>
+</div>
+
+<div class="card" id="c10">
+  <div class="card-header" onclick="tog('c10')">
+    <span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 10</span>
+    <div style="flex:1">
+      <div class="card-title">(Optional) Auto-trigger analysis after ingest</div>
+      <div class="card-sub">Background task so /ingest kicks off /analyse automatically</div>
+    </div>
+    <svg class="chevron open" id="chev-c10" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c10">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p10">Edit the existing /ingest endpoint in backend/api/main.py to automatically trigger analysis after a document is ingested, using FastAPI BackgroundTasks so the upload response is returned immediately without waiting for the orchestrator to finish.
+
+Changes needed:
+
+1. Update the /ingest function signature to accept a BackgroundTasks parameter:
+   async def ingest(file: UploadFile = File(...), background_tasks: BackgroundTasks = None)
+
+2. Import BackgroundTasks at the top: from fastapi import BackgroundTasks (add to existing fastapi import line).
+
+3. After the ingest_document() call returns and result has a "doc_id", fetch the document metadata from Supabase and build a trigger dict (same as in /analyse — vendor_name, doc_type, domain). Then:
+   background_tasks.add_task(orchestrate, trigger)
+
+4. Add "analysis_triggered": True to the return dict so the frontend knows analysis has started.
+
+Do not change anything else. The /ingest endpoint must still return the ingest result immediately — the orchestrator runs in the background.</div>
+    <button class="copy-btn" onclick="cp('p10',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+    <div class="tip"><strong>Optional but recommended.</strong> This makes the Day 3 Action Queue feel responsive — upload a PDF, switch to the Action Queue tab, and within ~30 seconds the pending action card appears. Without this, you need to manually call /analyse after every upload.</div>
+  </div>
+</div>
+
+<div class="phase-label">Fix-up prompts — use only if something breaks</div>
+
+<div class="card" id="fix1">
+  <div class="card-header" onclick="tog('fix1')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up A</span>
+    <div style="flex:1">
+      <div class="card-title">ModuleNotFoundError: No module named 'agents'</div>
+      <div class="card-sub">Python can't find the agents package — missing __init__ or wrong working directory</div>
+    </div>
+    <svg class="chevron open" id="chev-fix1" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-fix1">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="pfix1">The FastAPI server is throwing ModuleNotFoundError: No module named 'agents' when starting.
+
+Diagnose and fix this by checking:
+
+1. Confirm backend/agents/__init__.py exists. If it does not, create it as an empty file.
+
+2. Confirm the server is being started from the backend/ directory, not from sentinel.ai/ root. The command should be:
+   cd sentinel.ai/backend && uvicorn api.main:app --reload
+   If it is being run from the wrong directory, update the start command.
+
+3. If agents/__init__.py exists and the working directory is correct, check whether api/__init__.py also exists. If not, create it as an empty file.
+
+4. Print the current sys.path from inside main.py by temporarily adding:
+   import sys; print(sys.path)
+   at the top of api/main.py to confirm the backend/ directory is in the path.
+
+Do not change any import statements in orchestrator.py or sub_agents.py — the paths are correct as written.</div>
+    <button class="copy-btn" onclick="cp('pfix1',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="card" id="fix2">
+  <div class="card-header" onclick="tog('fix2')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up B</span>
+    <div style="flex:1">
+      <div class="card-title">Agentic loop runs forever or hits the iteration limit immediately</div>
+      <div class="card-sub">messages list not being built correctly — tool results not appended</div>
+    </div>
+    <svg class="chevron open" id="chev-fix2" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-fix2">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="pfix2">The orchestrator agentic loop in backend/agents/orchestrator.py is either running forever or stopping after the first Claude call without making any tool calls.
+
+Diagnose by adding print statements and checking the message-building logic:
+
+1. After the client.messages.create() call, print:
+   print(f"  [Loop iter {iteration}] stop_reason={response.stop_reason}, content_types={[b.type for b in response.content]}")
+
+2. Check that the assistant response is appended correctly. It must be:
+   messages.append({"role": "assistant", "content": response.content})
+   NOT: messages.append({"role": "assistant", "content": response.content[0].text})
+   The content must be the full list of content blocks, not just the text.
+
+3. Check that tool_results are appended as a user message:
+   messages.append({"role": "user", "content": tool_results})
+   where tool_results is a list of dicts with type="tool_result".
+
+4. If the loop exits after 1 iteration with stop_reason="end_turn" and no tool calls, the system prompt or initial user message may not be clearly asking Claude to use the tools. Add to the initial user message: "You must call invoke_contract_analyst first before doing anything else."
+
+Print the full messages list length at the start of each iteration to confirm it is growing.</div>
+    <button class="copy-btn" onclick="cp('pfix2',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+<div class="card" id="fix3">
+  <div class="card-header" onclick="tog('fix3')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up C</span>
+    <div style="flex:1">
+      <div class="card-title">JSONDecodeError when parsing sub-agent responses</div>
+      <div class="card-sub">Claude returned text with markdown fences — strip them before parsing</div>
+    </div>
+    <svg class="chevron open" id="chev-fix3" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-fix3">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="pfix3">One or more sub-agents in backend/agents/sub_agents.py are throwing JSONDecodeError when trying to parse Claude's response. Claude is returning JSON wrapped in markdown code fences like ```json ... ``` instead of raw JSON.
+
+For each sub-agent function (contract_analyst, research_agent, risk_scorer, negotiation_drafter), update the JSON parsing section to:
+
+1. Get the raw text: text = response.content[0].text.strip()
+2. Strip markdown code fences if present: text = text.replace("```json", "").replace("```", "").strip()
+3. Then try to find "{" to "}" and parse:
+   start = text.find("{")
+   end = text.rfind("}") + 1
+   if start >= 0 and end > start:
+       return json.loads(text[start:end])
+4. If that fails, try json.loads(text) directly on the stripped text.
+5. If both fail, return the safe fallback dict already defined for that function.
+
+Apply this pattern consistently to all four sub-agent parse sections. Do not change any other logic.</div>
+    <button class="copy-btn" onclick="cp('pfix3',this)">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg>
+      Copy
+    </button>
+  </div>
+</div>
+
+</div>
+
+<script>
+function tog(id){
+  const b=document.getElementById('body-'+id);
+  const c=document.getElementById('chev-'+id);
+  const open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  c.classList.toggle('open',!open);
+}
+function cp(id,btn){
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copied');},2000);
+  }).catch(()=>{btn.textContent='Select text above and copy manually';});
+}
+</script>

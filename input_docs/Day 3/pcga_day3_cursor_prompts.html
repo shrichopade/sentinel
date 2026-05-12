@@ -1,0 +1,517 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.phase-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:1.5rem 0 .5rem}
+.phase-label:first-child{margin-top:0}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:12px;overflow:hidden}
+.card-header{display:flex;align-items:flex-start;gap:10px;padding:12px 14px 10px;cursor:pointer;user-select:none}
+.card-header:hover{background:var(--color-background-secondary)}
+.badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;line-height:1.4}
+.card-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.chevron{width:14px;height:14px;flex-shrink:0;transition:transform .18s;margin-top:1px}
+.chevron.open{transform:rotate(90deg)}
+.card-body{border-top:0.5px solid var(--color-border-tertiary);padding:12px 14px}
+.prompt-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
+.prompt-box{font-family:var(--font-mono);font-size:11.5px;line-height:1.65;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px 12px;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+.copy-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.copy-btn:hover{background:var(--color-background-secondary)}
+.copy-btn.copied{color:var(--color-text-success);border-color:var(--color-border-success)}
+.tip{font-size:11px;color:var(--color-text-secondary);margin-top:8px;padding:7px 10px;background:var(--color-background-secondary);border-radius:6px;line-height:1.5}
+.tip strong{font-weight:500;color:var(--color-text-primary)}
+</style>
+
+<h2 class="sr-only">Cursor prompts for sentinel.ai Day 3 development tasks, organised by phase with copy buttons</h2>
+
+<div class="wrap">
+
+<div class="phase-label">Hour 1 — guardrail layer</div>
+
+<div class="card" id="c1">
+  <div class="card-header" onclick="tog('c1')">
+    <span class="badge" style="background:#FAEEDA;color:#633806">Prompt 1</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/agents/guardrails.py</div>
+      <div class="card-sub">Full post-processing pipeline — 4 checks + apply_guardrails() entry point</div>
+    </div>
+    <svg class="chevron open" id="chev-c1" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c1">
+    <div class="prompt-label">Cursor prompt — paste into chat or cmd+k</div>
+    <div class="prompt-box" id="p1">Create the file backend/agents/guardrails.py for the sentinel.ai project.
+
+This file is a post-processing pipeline that runs on every agent output before it reaches the user or the actions table. It never blocks output — it annotates it with warnings.
+
+Implement the following four functions and a main entry point:
+
+1. find_uncited_claims(text: str) -> list[str]
+   Scan the text for sentences that make a factual claim (contains a number, a date, a vendor name, or a legal term) but do not include a citation marker in the format [N] or [Source]. Return a list of the offending sentences.
+
+2. inject_legal_caveat(content: str, output_type: str) -> str
+   If output_type is one of "risk_assessment", "letter_draft", or "legal_finding", append this exact string to the content on a new line: "\n\n---\nAI-generated summary. Review with a qualified professional before acting."
+   Return the content unchanged for all other output types.
+
+3. redact_pii(content: str) -> tuple[str, list[str]]
+   Use regex to find and replace common UK personal identifiers:
+   - National Insurance numbers (pattern: two letters, six digits, one letter — e.g. AB123456C) → replace with [REDACTED-NI]
+   - Sort codes (pattern: XX-XX-XX where X is a digit) → replace with [REDACTED-SORT-CODE]
+   - 8-digit strings that look like bank account numbers when near the word "account" → replace with [REDACTED-ACCOUNT]
+   Return a tuple of (redacted_content, list_of_what_was_found).
+
+4. check_scope_escalation(content: str) -> tuple[bool, str]
+   Check the content for phrases that imply actions beyond the system's authority: "take legal action", "sue", "file a police report", "contact the Financial Ombudsman", "go to court", "file a claim", "seek legal counsel". If any are found, return (True, "This situation may require professional legal or financial advice."). Otherwise return (False, "").
+
+5. apply_guardrails(output: dict, output_type: str) -> dict
+   Main entry point. The output dict always has a "content" field (string) and may have a "warnings" list (create it if absent).
+   Run all four checks in sequence:
+   - Citation check: if uncited claims found, append warning message and mark each offending sentence in the content with a ⚠ prefix.
+   - Caveat injection: always run, replaces content in place.
+   - PII redaction: if PII found, replace in content and append warning listing what was redacted.
+   - Scope check: if escalation needed, set output["escalate"] = True and output["escalation_reason"] = the reason string.
+   Return the modified output dict.
+
+Use only Python standard library (re, typing). No external dependencies.
+Add a LEGAL_CAVEAT constant at the top of the file holding the caveat string.</div>
+    <button class="copy-btn" onclick="cp('p1',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+    <div class="tip"><strong>After running:</strong> Test by opening a Python shell in backend/ and calling apply_guardrails({"content": "The contract renews on 1 Jan 2026 and costs £50."}, "letter_draft"). Confirm the warnings list is not empty and the caveat appears at the bottom.</div>
+  </div>
+</div>
+
+<div class="card" id="c2">
+  <div class="card-header" onclick="tog('c2')">
+    <span class="badge" style="background:#FAEEDA;color:#633806">Prompt 2</span>
+    <div style="flex:1">
+      <div class="card-title">Wire guardrails into the orchestrator</div>
+      <div class="card-sub">Edit orchestrator.py — apply_guardrails() before returning working_memory</div>
+    </div>
+    <svg class="chevron open" id="chev-c2" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c2">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p2">Edit backend/agents/orchestrator.py.
+
+At the end of the orchestrate() function, just before the final "return working_memory" line, add the following logic:
+
+1. Import apply_guardrails from agents.guardrails at the top of the file.
+
+2. After the agentic loop exits, check if working_memory["action_item"] exists and has a "draft_content" field.
+
+3. If it does, pass the draft_content through apply_guardrails() with output_type set to "letter_draft". Store the sanitised content back into working_memory["action_item"]["draft_content"]. Also attach the warnings list and the escalate/escalation_reason fields from the guardrail output onto working_memory["action_item"].
+
+4. Also run apply_guardrails() on working_memory["findings"] if it exists — pass it as a dict with content = the summary field of each finding, output_type = "risk_assessment". Attach any warnings back to each finding dict.
+
+Do not change anything else in the orchestrator. The guardrail call should be a clean post-loop step, not inside the loop.</div>
+    <button class="copy-btn" onclick="cp('p2',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="phase-label">Hours 2–3 — HITL backend endpoints</div>
+
+<div class="card" id="c3">
+  <div class="card-header" onclick="tog('c3')">
+    <span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 3</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/api/actions.py — all 6 HITL endpoints</div>
+      <div class="card-sub">GET list, GET detail, PUT approve/reject/edit, POST send</div>
+    </div>
+    <svg class="chevron open" id="chev-c3" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c3">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p3">Create the file backend/api/actions.py for the sentinel.ai project.
+
+This file is a FastAPI router containing all six HITL action queue endpoints. Use the Supabase client from api.db (already exists at backend/api/db.py as "supabase").
+
+Router setup:
+  from fastapi import APIRouter, HTTPException
+  from pydantic import BaseModel
+  router = APIRouter(prefix="/actions", tags=["actions"])
+
+Implement these six endpoints:
+
+1. GET /actions
+   Query the Supabase "actions" table for rows where status = "pending".
+   Also join with the "documents" table to get vendor_name and doc_type for each action.
+   Sort results: critical first, then high, medium, low.
+   Return a list of summary objects (id, severity, title, summary, vendor_name, doc_type, created_at, escalate). Do NOT include draft_content in the list response.
+
+2. GET /actions/{action_id}
+   Return the full action row by UUID including: id, severity, title, summary, draft_content, reasoning, sources, warnings, escalate, escalation_reason, status, created_at.
+   Also return vendor_name and doc_type from the joined documents table.
+   Return 404 if not found.
+
+3. PUT /actions/{action_id}/approve
+   Set status = "approved" and actioned_at = now() on the actions row.
+   Then call store_preference() from memory.long_term (create a stub if the module does not exist yet — just log the call for now).
+   Return the updated action row.
+
+4. PUT /actions/{action_id}/reject
+   Accept an optional JSON body: {"reason": "string"}.
+   Set status = "rejected" and actioned_at = now().
+   If a reason is provided, append it to the reasoning field.
+   Call store_preference() stub.
+   Return the updated action row.
+
+5. PUT /actions/{action_id}/edit
+   Accept JSON body: {"draft_content": "string"}.
+   Update only the draft_content field. Status stays "pending".
+   Return the updated action row.
+
+6. POST /actions/{action_id}/send
+   IMPORTANT SAFETY GATE: First check that the action's status is exactly "approved". If it is not, raise HTTPException(status_code=403, detail="Action must be approved before sending").
+   If approved, call send_letter() from api.email (create the module in the next step — for now import it and wrap the call in a try/except).
+   On success: set status = "sent", actioned_at = now(). Return {"status": "sent", "action_id": action_id}.
+   On failure: do NOT change the status. Return {"status": "error", "detail": str(error)}.
+
+Use async def for all endpoints. Import supabase from api.db. Add proper type hints throughout.</div>
+    <button class="copy-btn" onclick="cp('p3',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+    <div class="tip"><strong>After running:</strong> Mount the router in main.py by adding: <code>from api.actions import router as actions_router</code> then <code>app.include_router(actions_router)</code>. Restart the server and test GET /actions — it should return your Day 2 pending action.</div>
+  </div>
+</div>
+
+<div class="card" id="c4">
+  <div class="card-header" onclick="tog('c4')">
+    <span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4</span>
+    <div style="flex:1">
+      <div class="card-title">Create backend/api/email.py — Resend integration</div>
+      <div class="card-sub">send_letter() function with error handling and config guard</div>
+    </div>
+    <svg class="chevron open" id="chev-c4" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c4">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p4">Create the file backend/api/email.py for the sentinel.ai project.
+
+This module sends letters via the Resend API.
+
+Requirements:
+- Create a table in Supabase to store the emails inlcuding all the key details of hte email ie. subject, from, to, and the body. 
+- Import resend and os. Load RESEND_API_KEY from the environment using python-dotenv.
+- At module load time, check that RESEND_API_KEY is set. If it is not, raise a warning with the message "RESEND_API_KEY is not set in .env, email sending will not work. Message will be stored in the database"
+- Set resend.api_key = os.getenv("RESEND_API_KEY").
+
+Implement one function:
+
+def send_letter(to_email: str, subject: str, body: str) -> dict:
+  Send the letter using resend.Emails.send().
+  The "from" address should be read from the environment variable RESEND_FROM_EMAIL (default to "onboarding@resend.dev" if not set — this is Resend's default test address for unverified domains).
+  The email body should be sent as plain text (not HTML).
+  On success, return {"success": True, "id": response["id"]}.
+  On any exception, catch it, print the error with a [email] prefix, and return {"success": False, "error": str(e)}.
+
+Also add a RESEND_FROM_EMAIL constant at the top that reads from the environment.
+
+No other functions are needed. Keep the file under 40 lines.</div>
+    <button class="copy-btn" onclick="cp('p4',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+    <div class="tip"><strong>Before running:</strong> Add <code>RESEND_API_KEY=your_key_here</code> and <code>RESEND_FROM_EMAIL=you@yourdomain.com</code> to backend/.env first. If you have not verified a domain with Resend yet, leave RESEND_FROM_EMAIL unset and use the default test address — Resend will deliver to your own inbox only.</div>
+  </div>
+</div>
+
+<div class="phase-label">Hours 4–6 — Action Queue UI</div>
+
+<div class="card" id="c5">
+  <div class="card-header" onclick="tog('c5')">
+    <span class="badge" style="background:#9FE1CB;color:#085041">Prompt 5</span>
+    <div style="flex:1">
+      <div class="card-title">Create frontend/src/pages/ActionQueue.jsx</div>
+      <div class="card-sub">Page shell — fetch actions on mount, sort by severity, empty state</div>
+    </div>
+    <svg class="chevron open" id="chev-c5" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c5">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p5">Create the file frontend/src/pages/ActionQueue.jsx for the sentinel.ai project.
+
+This is a React page component. The project uses React hooks and Tailwind CSS for styling. The API base URL is http://localhost:8000.
+
+Requirements:
+
+State:
+- actions: array of action summary objects (initially empty)
+- loading: boolean
+- error: string or null
+- successMessage: string or null (shown as a green banner after a send succeeds)
+
+On mount:
+- Call GET /actions via axios
+- Store the results in the actions state
+- Show a loading spinner while fetching (a simple "Loading..." text is fine)
+- Show an error message if the fetch fails
+
+Sorting:
+- Sort actions by severity before rendering: critical first, then high, medium, low
+- Define a severity order map at the top of the component: {critical:0, high:1, medium:2, low:3}
+
+Rendering:
+- Show a page heading "Action queue" (h1, text-2xl font-medium)
+- If actions is empty after loading, show: "No pending actions. The system is up to date."
+- If actions has items, render an ActionCard component for each (import from ../components/ActionCard)
+- Pass a callback prop onStatusChange to each ActionCard — when called, re-fetch the actions list
+- Show successMessage as a green banner at the top if it is set (auto-dismiss after 4 seconds using useEffect)
+
+Export the component as default.</div>
+    <button class="copy-btn" onclick="cp('p5',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="card" id="c6">
+  <div class="card-header" onclick="tog('c6')">
+    <span class="badge" style="background:#9FE1CB;color:#085041">Prompt 6</span>
+    <div style="flex:1">
+      <div class="card-title">Create frontend/src/components/ActionCard.jsx</div>
+      <div class="card-sub">Full card: badge, reasoning, editable draft, source chips, 3 buttons</div>
+    </div>
+    <svg class="chevron open" id="chev-c6" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c6">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p6">Create the file frontend/src/components/ActionCard.jsx for the sentinel.ai project.
+
+This component receives a single action summary object as the prop "action" and a callback "onStatusChange". It fetches the full action detail from GET /actions/{id} on mount to get draft_content, reasoning, sources, warnings, escalate, and escalation_reason.
+
+Props:
+- action: { id, severity, title, summary, vendor_name, doc_type, created_at }
+- onStatusChange: () => void — call this after any status update so the parent re-fetches
+
+State:
+- detail: full action object from the detail endpoint (null while loading)
+- isEditing: boolean — whether the textarea is in edit mode
+- draftContent: string — local copy of the letter, initialised from detail.draft_content
+- showModal: boolean — controls the confirm-send modal
+- reasoningOpen: boolean — controls the collapsible reasoning section (default true for critical/high)
+- saving: boolean — true while an API call is in flight
+
+Severity badge colours using Tailwind:
+- critical: bg-red-100 text-red-800
+- high: bg-orange-100 text-orange-800
+- medium: bg-yellow-100 text-yellow-800
+- low: bg-green-100 text-green-800
+
+Card layout (top to bottom):
+1. Header row: severity badge + vendor_name (font-medium) + doc_type (text-gray-500 text-sm) + created_at (right-aligned, text-xs text-gray-400)
+2. Summary: one-sentence issue summary (text-sm mt-2)
+3. Guardrail warnings: if detail.warnings exists and is non-empty, show each warning in an amber callout (bg-amber-50 border border-amber-200 rounded p-2 text-xs). If detail.escalate is true, show a separate callout in red: detail.escalation_reason.
+4. Reasoning section: a collapsible block with a "Reasoning" toggle button. Show detail.reasoning as text-sm text-gray-600 when open. Default open for critical and high severity.
+5. Draft letter: if isEditing, show a textarea (w-full h-48 text-sm font-mono border rounded p-2) bound to draftContent with a Save and Cancel button. If not editing, show the draftContent in a read-only pre block (whitespace-pre-wrap text-sm bg-gray-50 rounded p-3).
+6. Source chips: map over detail.sources (if any), each chip shows the first 50 characters of the content field as a small pill (text-xs bg-gray-100 rounded-full px-2 py-1).
+7. Button row: three buttons right-aligned — "Reject" (text-red-600 border-red-200), "Edit draft" (text-gray-600), "Approve & send" (bg-blue-600 text-white).
+
+Button behaviour:
+- Edit draft: set isEditing = true
+- Save (in edit mode): call PUT /actions/{id}/edit with draftContent, then set isEditing = false
+- Cancel (in edit mode): revert draftContent to detail.draft_content, set isEditing = false
+- Reject: show an inline input for optional reason, then call PUT /actions/{id}/reject. On success, call onStatusChange().
+- Approve & send: set showModal = true
+
+Confirm modal (show when showModal = true):
+- Render as a fixed-position overlay (bg-black bg-opacity-40) containing a white card
+- Show: "Sending to: {RESEND_FROM_EMAIL placeholder}" + full draftContent in a scrollable read-only block + bold warning text: "This will send a real email."
+- Two buttons: "Cancel" (sets showModal = false) and "Confirm & send" (calls POST /actions/{id}/send)
+- On send success: close modal, call onStatusChange(), show a brief "Sent" badge on the card and disable all three buttons
+- On send failure: show error message inside the modal, do not close it
+
+Use axios for all API calls. API base URL is http://localhost:8000.</div>
+    <button class="copy-btn" onclick="cp('p6',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+    <div class="tip"><strong>This is the largest component of the day.</strong> If Cursor generates it in one pass but something is broken, use a follow-up prompt: "The confirm modal is not closing after a successful send — fix the showModal state update in the send success handler."</div>
+  </div>
+</div>
+
+<div class="card" id="c7">
+  <div class="card-header" onclick="tog('c7')">
+    <span class="badge" style="background:#9FE1CB;color:#085041">Prompt 7</span>
+    <div style="flex:1">
+      <div class="card-title">Add ActionQueue to App.js navigation</div>
+      <div class="card-sub">Third nav tab — wire to ActionQueue page</div>
+    </div>
+    <svg class="chevron open" id="chev-c7" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c7">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p7">Edit frontend/src/App.js.
+
+Add a third navigation tab "Action queue" between the existing "Document Vault" and "Chat" tabs.
+
+Import ActionQueue from ./pages/ActionQueue.
+Add "queue" as a valid page state value.
+Render the ActionQueue component when page === "queue".
+Style the active tab consistently with the existing pattern.
+
+Do not change anything else in App.js.</div>
+    <button class="copy-btn" onclick="cp('p7',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="phase-label">Hour 7 — Activity Log</div>
+
+<div class="card" id="c8">
+  <div class="card-header" onclick="tog('c8')">
+    <span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 8</span>
+    <div style="flex:1">
+      <div class="card-title">Add GET /activity endpoint to backend</div>
+      <div class="card-sub">Query agent_steps table, optional document_id filter</div>
+    </div>
+    <svg class="chevron open" id="chev-c8" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c8">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p8">Add a new endpoint to backend/api/actions.py.
+
+GET /activity
+- Optional query parameter: document_id (string, default None)
+- Query the Supabase "agent_steps" table
+- If document_id is provided, filter by that document_id
+- Always order by created_at descending (newest first)
+- For each row, construct a "link" field: if document_id is set on the row, set link = "/vault?doc=" + document_id, else link = None
+- Return a list of objects with fields: id, document_id, agent_name, tool_called, summary, created_at, link
+- Also add a computed field "is_autonomous": true if tool_called does not equal "create_action_item", false if it does (the action item creation is the human-triggered checkpoint)
+
+Also mount this new router in backend/api/main.py if it is not already included — add: from api.actions import router as actions_router and app.include_router(actions_router) if not present.</div>
+    <button class="copy-btn" onclick="cp('p8',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="card" id="c9">
+  <div class="card-header" onclick="tog('c9')">
+    <span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 9</span>
+    <div style="flex:1">
+      <div class="card-title">Create frontend/src/pages/ActivityLog.jsx</div>
+      <div class="card-sub">Timeline feed — timestamps, badges, autonomous tags, doc links</div>
+    </div>
+    <svg class="chevron open" id="chev-c9" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c9">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p9">Create the file frontend/src/pages/ActivityLog.jsx for the sentinel.ai project.
+
+This page renders a chronological activity feed of every step taken by the orchestrator. The API base URL is http://localhost:8000.
+
+On mount: call GET /activity via axios and store results in state. Show a loading state while fetching.
+
+Layout:
+- Page heading: "Activity log" (h1, text-2xl font-medium mb-6)
+- If no entries: show "No activity recorded yet."
+- If entries exist: render a vertical timeline list
+
+Timeline visual:
+- Draw a thin vertical line (1px, bg-gray-200) down the left side of the list using a relatively-positioned container
+- Each entry is a flex row: a dot on the left (absolute-positioned circle, 10px, on the vertical line) and the entry content to the right
+- Dot colour: gray for autonomous steps (is_autonomous = true), blue for human-triggered steps (is_autonomous = false)
+
+Each entry content (text-sm):
+- First line: relative timestamp (e.g. "2 hours ago") — use a simple helper function: if less than 60s ago show "just now", less than 60m show "X mins ago", less than 24h show "X hours ago", else show the date string. Place this on the right in text-xs text-gray-400.
+- Second line: agent_name in a small gray pill badge + tool_called in monospace text-gray-700
+- Third line: summary text (text-gray-600, normal weight)
+- Fourth line (if link exists): a small "View document" link in text-blue-500 text-xs
+
+Tag the entry with "Autonomous" (gray pill) or "Human review" (blue pill) based on is_autonomous.
+
+Add a thin horizontal separator between entries (except after the last one).
+
+Add this page to App.js as a fourth tab "Activity log" alongside the existing Document Vault, Action Queue, and Chat tabs. Import it from ./pages/ActivityLog and render when page === "activity".</div>
+    <button class="copy-btn" onclick="cp('p9',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+    <div class="tip"><strong>This prompt also updates App.js.</strong> If Cursor asks whether to edit App.js separately, say yes — it needs to add the fourth tab alongside the one added in Prompt 7.</div>
+  </div>
+</div>
+
+<div class="phase-label">Fix-up prompts — use only if something breaks</div>
+
+<div class="card" id="c10">
+  <div class="card-header" onclick="tog('c10')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up A</span>
+    <div style="flex:1">
+      <div class="card-title">CORS error when frontend calls backend</div>
+      <div class="card-sub">FastAPI CORS middleware fix</div>
+    </div>
+    <svg class="chevron open" id="chev-c10" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c10">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p10">The React frontend at http://localhost:3000 is getting a CORS error when calling the FastAPI backend at http://localhost:8000.
+
+Edit backend/api/main.py. Ensure the CORSMiddleware is configured with:
+- allow_origins=["http://localhost:3000"]
+- allow_credentials=True
+- allow_methods=["*"]
+- allow_headers=["*"]
+
+If CORSMiddleware is already present, check that allow_credentials is True and that the origin list includes http://localhost:3000 exactly (no trailing slash). Do not add duplicate middleware.</div>
+    <button class="copy-btn" onclick="cp('p10',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="card" id="c11">
+  <div class="card-header" onclick="tog('c11')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up B</span>
+    <div style="flex:1">
+      <div class="card-title">Modal not closing after send succeeds</div>
+      <div class="card-sub">ActionCard.jsx state bug fix</div>
+    </div>
+    <svg class="chevron open" id="chev-c11" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c11">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p11">In frontend/src/components/ActionCard.jsx, the confirm-send modal is not closing after a successful send.
+
+Find the handler that calls POST /actions/{id}/send. After the axios call returns successfully (response.data.status === "sent"), make sure ALL of these state updates happen:
+1. setShowModal(false)
+2. Update the local detail state to reflect status = "sent"
+3. Call the onStatusChange() prop callback
+
+Also disable the Approve & send, Edit draft, and Reject buttons when detail.status === "sent" — replace them with a static "Sent" green badge.
+
+Do not change any other logic in the component.</div>
+    <button class="copy-btn" onclick="cp('p11',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+<div class="card" id="c12">
+  <div class="card-header" onclick="tog('c12')">
+    <span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up C</span>
+    <div style="flex:1">
+      <div class="card-title">Supabase actions query returning empty</div>
+      <div class="card-sub">Debug and fix GET /actions when table has rows</div>
+    </div>
+    <svg class="chevron open" id="chev-c12" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="card-body" id="body-c12">
+    <div class="prompt-label">Cursor prompt</div>
+    <div class="prompt-box" id="p12">GET /actions is returning an empty list even though the Supabase actions table has rows with status = "pending".
+
+In backend/api/actions.py, debug the Supabase query in the GET /actions handler:
+
+1. Add a print statement before the query that logs: "Querying actions table for pending rows"
+2. Add a print statement after the query that logs the raw result.data value
+3. Check that the .eq("status", "pending") filter is using exactly the string "pending" — no extra spaces
+4. Check that .execute() is being called and the result is not being awaited incorrectly (Supabase Python client is synchronous — do not use await on .execute())
+5. If the join with the documents table is failing silently, temporarily remove the join and just return the raw actions rows to confirm the base query works
+
+Print the full error to the terminal if result.data is None or an exception is raised.</div>
+    <button class="copy-btn" onclick="cp('p12',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+function tog(id){
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chev.classList.toggle('open', !open);
+}
+
+function cp(id, btn){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    btn.textContent = 'Select text above and copy manually';
+  });
+}
+</script>

@@ -1,0 +1,46 @@
+Create the file frontend/src/components/ActionCard.jsx for the PCGA project.
+
+This component receives a single action summary object as the prop "action" and a callback "onStatusChange". It fetches the full action detail from GET /actions/{id} on mount to get draft_content, reasoning, sources, warnings, escalate, and escalation_reason.
+
+Props:
+- action: { id, severity, title, summary, vendor_name, doc_type, created_at }
+- onStatusChange: () => void — call this after any status update so the parent re-fetches
+
+State:
+- detail: full action object from the detail endpoint (null while loading)
+- isEditing: boolean — whether the textarea is in edit mode
+- draftContent: string — local copy of the letter, initialised from detail.draft_content
+- showModal: boolean — controls the confirm-send modal
+- reasoningOpen: boolean — controls the collapsible reasoning section (default true for critical/high)
+- saving: boolean — true while an API call is in flight
+
+Severity badge colours using Tailwind:
+- critical: bg-red-100 text-red-800
+- high: bg-orange-100 text-orange-800
+- medium: bg-yellow-100 text-yellow-800
+- low: bg-green-100 text-green-800
+
+Card layout (top to bottom):
+1. Header row: severity badge + vendor_name (font-medium) + doc_type (text-gray-500 text-sm) + created_at (right-aligned, text-xs text-gray-400)
+2. Summary: one-sentence issue summary (text-sm mt-2)
+3. Guardrail warnings: if detail.warnings exists and is non-empty, show each warning in an amber callout (bg-amber-50 border border-amber-200 rounded p-2 text-xs). If detail.escalate is true, show a separate callout in red: detail.escalation_reason.
+4. Reasoning section: a collapsible block with a "Reasoning" toggle button. Show detail.reasoning as text-sm text-gray-600 when open. Default open for critical and high severity.
+5. Draft letter: if isEditing, show a textarea (w-full h-48 text-sm font-mono border rounded p-2) bound to draftContent with a Save and Cancel button. If not editing, show the draftContent in a read-only pre block (whitespace-pre-wrap text-sm bg-gray-50 rounded p-3).
+6. Source chips: map over detail.sources (if any), each chip shows the first 50 characters of the content field as a small pill (text-xs bg-gray-100 rounded-full px-2 py-1).
+7. Button row: three buttons right-aligned — "Reject" (text-red-600 border-red-200), "Edit draft" (text-gray-600), "Approve & send" (bg-blue-600 text-white).
+
+Button behaviour:
+- Edit draft: set isEditing = true
+- Save (in edit mode): call PUT /actions/{id}/edit with draftContent, then set isEditing = false
+- Cancel (in edit mode): revert draftContent to detail.draft_content, set isEditing = false
+- Reject: show an inline input for optional reason, then call PUT /actions/{id}/reject. On success, call onStatusChange().
+- Approve & send: set showModal = true
+
+Confirm modal (show when showModal = true):
+- Render as a fixed-position overlay (bg-black bg-opacity-40) containing a white card
+- Show: "Sending to: {RESEND_FROM_EMAIL placeholder}" + full draftContent in a scrollable read-only block + bold warning text: "This will send a real email."
+- Two buttons: "Cancel" (sets showModal = false) and "Confirm & send" (calls POST /actions/{id}/send)
+- On send success: close modal, call onStatusChange(), show a brief "Sent" badge on the card and disable all three buttons
+- On send failure: show error message inside the modal, do not close it
+
+Use axios for all API calls. API base URL is http://localhost:8000.

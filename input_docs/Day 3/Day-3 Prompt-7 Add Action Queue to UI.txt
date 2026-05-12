@@ -1,0 +1,10 @@
+Edit frontend/src/App.js.
+
+Add a third navigation tab "Action queue" between the existing "Document Vault" and "Chat" tabs.
+
+Import ActionQueue from ./pages/ActionQueue.
+Add "queue" as a valid page state value.
+Render the ActionQueue component when page === "queue".
+Style the active tab consistently with the existing pattern.
+
+Do not change anything else in App.js.

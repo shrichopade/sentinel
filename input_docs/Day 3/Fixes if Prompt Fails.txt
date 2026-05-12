@@ -1,0 +1,39 @@
+FIX A:
+
+The React frontend at http://localhost:3000 is getting a CORS error when calling the FastAPI backend at http://localhost:8000.
+
+Edit backend/api/main.py. Ensure the CORSMiddleware is configured with:
+- allow_origins=["http://localhost:3000"]
+- allow_credentials=True
+- allow_methods=["*"]
+- allow_headers=["*"]
+
+If CORSMiddleware is already present, check that allow_credentials is True and that the origin list includes http://localhost:3000 exactly (no trailing slash). Do not add duplicate middleware.
+
+
+FIX B:
+
+In frontend/src/components/ActionCard.jsx, the confirm-send modal is not closing after a successful send.
+
+Find the handler that calls POST /actions/{id}/send. After the axios call returns successfully (response.data.status === "sent"), make sure ALL of these state updates happen:
+1. setShowModal(false)
+2. Update the local detail state to reflect status = "sent"
+3. Call the onStatusChange() prop callback
+
+Also disable the Approve & send, Edit draft, and Reject buttons when detail.status === "sent" — replace them with a static "Sent" green badge.
+
+Do not change any other logic in the component.
+
+FIX C:
+
+GET /actions is returning an empty list even though the Supabase actions table has rows with status = "pending".
+
+In backend/api/actions.py, debug the Supabase query in the GET /actions handler:
+
+1. Add a print statement before the query that logs: "Querying actions table for pending rows"
+2. Add a print statement after the query that logs the raw result.data value
+3. Check that the .eq("status", "pending") filter is using exactly the string "pending" — no extra spaces
+4. Check that .execute() is being called and the result is not being awaited incorrectly (Supabase Python client is synchronous — do not use await on .execute())
+5. If the join with the documents table is failing silently, temporarily remove the join and just return the raw actions rows to confirm the base query works
+
+Print the full error to the terminal if result.data is None or an exception is raised.

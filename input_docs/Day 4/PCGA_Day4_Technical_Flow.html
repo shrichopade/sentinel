@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PCGA Day 4 — Technical Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #252a38;
+    --border-light: #2e3448;
+    --text-primary: #e8eaf0;
+    --text-secondary: #7a8099;
+    --text-tertiary: #4a5068;
+    --purple: #8b7cf8;
+    --purple-dim: #3d3570;
+    --teal: #4ecdc4;
+    --teal-dim: #1d4d4a;
+    --amber: #f5a623;
+    --amber-dim: #4a3210;
+    --coral: #ff6b6b;
+    --coral-dim: #4a1f1f;
+    --blue: #5b9cf6;
+    --blue-dim: #1e2f52;
+    --green: #5cb85c;
+    --green-dim: #1a3a1a;
+    --gray: #3a4055;
+    --gray-text: #9aa0b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px 48px;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 36px; }
+  .header-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 8px;
+  }
+  .header-title { font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .header-sub { font-size: 13px; color: var(--text-secondary); }
+
+  /* Phase bands */
+  .phase {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .phase-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,.02);
+  }
+  .phase-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .1em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .phase-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
+  .phase-body { padding: 20px 16px; }
+
+  /* Flow rows */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .flow-row:last-child { margin-bottom: 0; }
+
+  /* Nodes */
+  .node {
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid;
+    min-width: 130px;
+    flex-shrink: 0;
+  }
+  .node-title {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .node-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    opacity: .7;
+  }
+
+  /* Node colour variants */
+  .n-purple { background: rgba(139,124,248,.08); border-color: var(--purple-dim); }
+  .n-purple .node-title { color: var(--purple); }
+  .n-teal { background: rgba(78,205,196,.08); border-color: var(--teal-dim); }
+  .n-teal .node-title { color: var(--teal); }
+  .n-amber { background: rgba(245,166,35,.08); border-color: var(--amber-dim); }
+  .n-amber .node-title { color: var(--amber); }
+  .n-coral { background: rgba(255,107,107,.08); border-color: var(--coral-dim); }
+  .n-coral .node-title { color: var(--coral); }
+  .n-blue { background: rgba(91,156,246,.08); border-color: var(--blue-dim); }
+  .n-blue .node-title { color: var(--blue); }
+  .n-green { background: rgba(92,184,92,.12); border-color: var(--green-dim); }
+  .n-green .node-title { color: var(--green); }
+  .n-gray { background: rgba(58,64,85,.4); border-color: var(--border); }
+  .n-gray .node-title { color: var(--gray-text); }
+
+  /* Arrows */
+  .arr {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .arr-down {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    width: 100%;
+  }
+  .arr-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--text-tertiary);
+    letter-spacing: .06em;
+    margin-top: 2px;
+  }
+
+  /* Sub-flow: indented block */
+  .sub-flow {
+    border-left: 2px solid var(--border);
+    margin-left: 20px;
+    padding-left: 16px;
+    margin-top: 8px;
+  }
+
+  /* Grid for parallel nodes */
+  .node-grid {
+    display: grid;
+    gap: 8px;
+  }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+  /* Checkpoint */
+  .checkpoint {
+    background: rgba(92,184,92,.06);
+    border: 1px solid var(--green-dim);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 6px;
+  }
+  .checkpoint-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .checkpoint-title { font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+  .checkpoint-items { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+
+  /* Data flow connector strip */
+  .connector-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 10px 0;
+  }
+  .connector-node {
+    flex: 1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+  .connector-node .node-title { font-size: 11px; }
+  .connector-node .node-sub { font-size: 9px; }
+  .connector-arr {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* Note pills */
+  .note {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  /* Section divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 14px 0;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">PCGA · Day 4</div>
+    <div class="header-title">Memory, Google Drive MCP &amp; Monitoring Loop</div>
+    <div class="header-sub">Technical flow — hour by hour, showing every component and its interactions</div>
+  </div>
+
+  <!-- ════════════════════ HOUR 1 ════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-tag" style="background:rgba(139,124,248,.15);color:var(--purple)">Hour 1</span>
+      <span class="phase-title">Long-term memory module — memory/long_term.py</span>
+    </div>
+    <div class="phase-body">
+
+      <!-- Write path -->
+      <div class="flow-row">
+        <div class="node n-gray">
+          <div class="node-title">HITL decision</div>
+          <div class="node-sub">approve / reject / send</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple">
+          <div class="node-title">LongTermMemory</div>
+          <div class="node-sub">memory/long_term.py</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-amber">
+          <div class="node-title">_embed(text)</div>
+          <div class="node-sub">OpenAI text-embedding-3-small<br/>→ 1536-dim vector</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-blue">
+          <div class="node-title">Supabase memory</div>
+          <div class="node-sub">upsert row + vector</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 5 methods -->
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">5 PUBLIC METHODS</div>
+      <div class="node-grid grid-5" style="margin-bottom:12px;">
+        <div class="node n-purple" style="min-width:0;">
+          <div class="node-title">store_vendor_observation</div>
+          <div class="node-sub">event · detail · date</div>
+        </div>
+        <div class="node n-purple" style="min-width:0;">
+          <div class="node-title">store_user_preference</div>
+          <div class="node-sub">context · decision · outcome</div>
+        </div>
+        <div class="node n-purple" style="min-width:0;">
+          <div class="node-title">store_outcome</div>
+          <div class="node-sub">action_id · result · £impact</div>
+        </div>
+        <div class="node n-teal" style="min-width:0;">
+          <div class="node-title">recall_vendor_history</div>
+          <div class="node-sub">key lookup → last 10</div>
+        </div>
+        <div class="node n-teal" style="min-width:0;">
+          <div class="node-title">recall_relevant_preferences</div>
+          <div class="node-sub">match_memory RPC ≥ 0.65</div>
+        </div>
+      </div>
+
+      <!-- Wire into actions.py -->
+      <div class="flow-row">
+        <div class="node n-gray" style="min-width:0;flex:1;">
+          <div class="node-title">api/actions.py — PUT /approve</div>
+          <div class="node-sub">after status = "approved"</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple" style="min-width:0;flex:1;">
+          <div class="node-title">store_user_preference + store_vendor_observation</div>
+          <div class="node-sub">wrapped in try/except — never breaks approval flow</div>
+        </div>
+      </div>
+      <div class="flow-row" style="margin-top:6px;">
+        <div class="node n-gray" style="min-width:0;flex:1;">
+          <div class="node-title">api/actions.py — PUT /reject</div>
+          <div class="node-sub">decision="rejected", reason in outcome</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple" style="min-width:0;flex:1;">
+          <div class="node-title">store_user_preference</div>
+          <div class="node-sub">outcome includes rejection reason</div>
+        </div>
+      </div>
+      <div class="flow-row" style="margin-top:6px;">
+        <div class="node n-gray" style="min-width:0;flex:1;">
+          <div class="node-title">api/actions.py — POST /send</div>
+          <div class="node-sub">after successful Resend call</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple" style="min-width:0;flex:1;">
+          <div class="node-title">store_outcome</div>
+          <div class="node-sub">result="letter_sent", financial_impact=0.0</div>
+        </div>
+      </div>
+
+      <!-- match_memory RPC -->
+      <div class="divider"></div>
+      <div class="flow-row">
+        <div class="node n-teal" style="flex:1;min-width:0;">
+          <div class="node-title">match_memory() — Supabase RPC</div>
+          <div class="node-sub">vector(1536) cosine search · filters: user_id + memory_type · threshold 0.65 · limit 5</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">memory table</div>
+          <div class="node-sub">vendor | preference | outcome<br/>embedding not null filter</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ HOURS 2–3 ════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-tag" style="background:rgba(255,107,107,.12);color:var(--coral)">Hours 2–3</span>
+      <span class="phase-title">Google Drive MCP integration — mcp/google_drive.py</span>
+    </div>
+    <div class="phase-body">
+
+      <div class="flow-row">
+        <div class="node n-gray">
+          <div class="node-title">POST /sync/drive</div>
+          <div class="node-sub">manual trigger endpoint</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-coral">
+          <div class="node-title">get_last_sync_time()</div>
+          <div class="node-sub">reads memory table<br/>drive_sync key</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-coral">
+          <div class="node-title">list_new_documents(since)</div>
+          <div class="node-sub">_call_mcp_tool("gdrive_search")<br/>filter modifiedTime &gt; since</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-coral">
+          <div class="node-title">fetch_document(file_id)</div>
+          <div class="node-sub">_call_mcp_tool("gdrive_read_file")<br/>base64 decode → bytes</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-amber">
+          <div class="node-title">ingest_document()</div>
+          <div class="node-sub">Day 1 pipeline<br/>classify → chunk → embed</div>
+        </div>
+      </div>
+
+      <div class="arr-down">↓</div>
+
+      <div class="flow-row">
+        <div class="node n-coral">
+          <div class="node-title">set_last_sync_time()</div>
+          <div class="node-sub">upsert drive_sync row<br/>in memory table</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-blue">
+          <div class="node-title">Return summary</div>
+          <div class="node-sub">synced_count · files[]<br/>last_sync ISO timestamp</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- MCP internals -->
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">MCP HTTP CALL PATTERN</div>
+      <div class="flow-row">
+        <div class="node n-gray" style="flex:1;min-width:0;">
+          <div class="node-title">_call_mcp_tool(tool_name, input)</div>
+          <div class="node-sub">POST https://drivemcp.googleapis.com/mcp/v1/tools/call<br/>body: {name, input} · timeout: 30s</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-coral" style="min-width:110px;">
+          <div class="node-title">Google Drive MCP</div>
+          <div class="node-sub">already connected<br/>auth via Claude account</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-gray" style="min-width:110px;">
+          <div class="node-title">response.json()</div>
+          <div class="node-sub">content[0].text<br/>JSON parse → list</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ HOURS 4–5 ════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-tag" style="background:rgba(78,205,196,.12);color:var(--teal)">Hours 4–5</span>
+      <span class="phase-title">Monitoring loop — agents/monitor.py + APScheduler</span>
+    </div>
+    <div class="phase-body">
+
+      <!-- Scheduler trigger -->
+      <div class="flow-row">
+        <div class="node n-teal">
+          <div class="node-title">APScheduler</div>
+          <div class="node-sub">interval · every 6 hours<br/>FastAPI lifespan hook</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-teal">
+          <div class="node-title">POST /monitor/run</div>
+          <div class="node-sub">manual trigger<br/>for testing</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple">
+          <div class="node-title">run_monitoring_cycle(user_id)</div>
+          <div class="node-sub">4-step autonomous cycle</div>
+        </div>
+      </div>
+
+      <div class="arr-down">↓</div>
+
+      <!-- 4 cycle steps -->
+      <div class="node-grid grid-4" style="margin-bottom:12px;">
+        <div class="node n-coral" style="min-width:0;">
+          <div class="node-title">Step 1 — Drive sync</div>
+          <div class="node-sub">list_new_documents()<br/>fetch + ingest each<br/>set_last_sync_time()</div>
+        </div>
+        <div class="node n-amber" style="min-width:0;">
+          <div class="node-title">Step 2 — Deadline alerts</div>
+          <div class="node-sub">obligations due ≤ 30d<br/>no pending action?<br/>→ orchestrate(trigger)</div>
+        </div>
+        <div class="node n-amber" style="min-width:0;">
+          <div class="node-title">Step 3 — Stale escalation</div>
+          <div class="node-sub">actions pending &gt; 7d<br/>medium→high<br/>high→critical</div>
+        </div>
+        <div class="node n-gray" style="min-width:0;">
+          <div class="node-title">Step 4 — Memory stub</div>
+          <div class="node-sub">consolidate_short_term<br/>(not yet implemented<br/>Day 5+)</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Each step's data interactions -->
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">STEP 2 — DEADLINE ALERT DETAIL</div>
+      <div class="flow-row">
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">get_obligations_due_within_days(user_id, 30)</div>
+          <div class="node-sub">query: due_date ≤ today+30, status="pending", join documents for vendor_name</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-amber" style="min-width:140px;">
+          <div class="node-title">obligation_has_pending_action(doc_id)</div>
+          <div class="node-sub">guard: skip if action exists</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-purple" style="min-width:120px;">
+          <div class="node-title">orchestrate(trigger)</div>
+          <div class="node-sub">auto-creates HITL action<br/>no user prompt needed</div>
+        </div>
+      </div>
+
+      <!-- APScheduler lifespan -->
+      <div class="divider"></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">APSCHEDULER — FASTAPI LIFESPAN PATTERN</div>
+      <div class="flow-row">
+        <div class="node n-gray" style="flex:1;min-width:0;">
+          <div class="node-title">@asynccontextmanager async def lifespan(app)</div>
+          <div class="node-sub">scheduler.start() before yield · scheduler.shutdown() after yield</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-teal" style="min-width:130px;">
+          <div class="node-title">app = FastAPI(lifespan=lifespan)</div>
+          <div class="node-sub">replaces deprecated on_event</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ HOURS 6–7 ════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-tag" style="background:rgba(91,156,246,.12);color:var(--blue)">Hours 6–7</span>
+      <span class="phase-title">Dashboard UI — React + GET /dashboard/summary</span>
+    </div>
+    <div class="phase-body">
+
+      <!-- Backend aggregation -->
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">BACKEND — GET /dashboard/summary</div>
+      <div class="flow-row">
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">documents query</div>
+          <div class="node-sub">group by domain<br/>avg risk_score<br/>status: red≥7 / amber≥4 / green</div>
+        </div>
+        <div class="arr">+</div>
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">actions query</div>
+          <div class="node-sub">status="pending"<br/>group by severity<br/>total_pending count</div>
+        </div>
+        <div class="arr">+</div>
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">obligations query</div>
+          <div class="node-sub">due_date ≤ today+90d<br/>sort asc · limit 20<br/>join vendor_name</div>
+        </div>
+        <div class="arr">+</div>
+        <div class="node n-blue" style="flex:1;min-width:0;">
+          <div class="node-title">financial exposure</div>
+          <div class="node-sub">SUM financial_amount<br/>where status="pending"<br/>not null</div>
+        </div>
+      </div>
+
+      <div class="arr-down">↓  combined JSON response</div>
+
+      <!-- Frontend surfaces -->
+      <div style="font-size:11px;color:var(--text-secondary);margin:8px 0;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">FRONTEND — Dashboard.jsx</div>
+      <div class="node-grid grid-3" style="margin-bottom:12px;">
+        <div class="node n-blue" style="min-width:0;">
+          <div class="node-title">Summary banner</div>
+          <div class="node-sub">"N issues need attention"<br/>"Est. exposure: £340"<br/>Sync Drive button</div>
+        </div>
+        <div class="node n-blue" style="min-width:0;">
+          <div class="node-title">5 DomainTile components</div>
+          <div class="node-sub">subscription · employment<br/>tax · gdpr · housing<br/>green / amber / red border</div>
+        </div>
+        <div class="node n-blue" style="min-width:0;">
+          <div class="node-title">Obligations timeline</div>
+          <div class="node-sub">next 90 days strip<br/>due date · vendor · type badge<br/>renewal / cancellation / payment</div>
+        </div>
+      </div>
+
+      <!-- DomainTile detail -->
+      <div class="divider"></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">DOMAINTILE — COMPONENT DETAIL</div>
+      <div class="flow-row">
+        <div class="node n-gray" style="flex:1;min-width:0;">
+          <div class="node-title">DomainTile props</div>
+          <div class="node-sub">{domain, doc_count, avg_risk, open_actions, status}</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-blue" style="min-width:130px;">
+          <div class="node-title">Left border colour</div>
+          <div class="node-sub">border-green-400 / amber / red<br/>driven by status field</div>
+        </div>
+        <div class="arr">→</div>
+        <div class="node n-amber" style="min-width:140px;">
+          <div class="node-title">"View open actions" link</div>
+          <div class="node-sub">shown only if status<br/>is red or amber</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ FULL DATA FLOW STRIP ════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <span class="phase-tag" style="background:rgba(92,184,92,.12);color:var(--green)">Day 3 → Day 4</span>
+      <span class="phase-title">How Days 3 and 4 connect — full data flow</span>
+    </div>
+    <div class="phase-body">
+      <div class="connector-strip">
+        <div class="connector-node n-gray">
+          <div class="node-title">Day 3 outputs</div>
+          <div class="node-sub">actions + agent_steps<br/>in Supabase</div>
+        </div>
+        <div class="connector-arr">→</div>
+        <div class="connector-node n-purple">
+          <div class="node-title">Memory write</div>
+          <div class="node-sub">every HITL decision<br/>writes preference</div>
+        </div>
+        <div class="connector-arr">→</div>
+        <div class="connector-node n-coral">
+          <div class="node-title">Drive MCP sync</div>
+          <div class="node-sub">new PDFs auto-ingested<br/>last_sync tracked</div>
+        </div>
+        <div class="connector-arr">→</div>
+        <div class="connector-node n-teal">
+          <div class="node-title">Monitor loop</div>
+          <div class="node-sub">deadline alerts<br/>stale escalation</div>
+        </div>
+        <div class="connector-arr">→</div>
+        <div class="connector-node n-blue">
+          <div class="node-title">Dashboard</div>
+          <div class="node-sub">real data · domain tiles<br/>financial exposure</div>
+        </div>
+        <div class="connector-arr">→</div>
+        <div class="connector-node n-green">
+          <div class="node-title">Day 4 checkpoint</div>
+          <div class="node-sub">Drive sync ✓<br/>loop ✓ · memory ✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ CHECKPOINT ════════════════════ -->
+  <div class="checkpoint">
+    <div class="checkpoint-label">End of Day 4 — checkpoint</div>
+    <div class="checkpoint-title">4 tests must pass before Day 4 is complete</div>
+    <div class="checkpoint-items">
+      1. POST /sync/drive ingests a new PDF from Google Drive and it appears in Document Vault<br/>
+      2. POST /monitor/run returns {"errors": []} — the monitoring cycle completes without errors<br/>
+      3. Dashboard shows real domain tiles with doc counts and the financial exposure figure<br/>
+      4. Supabase memory table has rows with memory_type = "preference" and non-null embedding after a HITL approval/rejection
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;color:var(--text-tertiary);text-transform:uppercase;width:100%;margin-bottom:4px;">Legend</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple-dim);border:1px solid var(--purple);"></div>Memory / orchestration</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral-dim);border:1px solid var(--coral);"></div>Google Drive MCP</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--teal-dim);border:1px solid var(--teal);"></div>Monitoring loop / scheduler</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue-dim);border:1px solid var(--blue);"></div>API / database / frontend</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber-dim);border:1px solid var(--amber);"></div>Processing / computation</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gray);border:1px solid var(--border-light);"></div>Input / output / trigger</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-dim);border:1px solid var(--green);"></div>Checkpoint / success state</div>
+  </div>
+
+</div>
+</body>
+</html>

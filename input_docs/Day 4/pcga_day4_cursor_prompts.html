@@ -1,0 +1,994 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.wrap{padding:1rem 0}
+.phase-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.05em;text-transform:uppercase;margin:1.5rem 0 .5rem}
+.phase-label:first-child{margin-top:0}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:10px;overflow:hidden}
+.card-header{display:flex;align-items:flex-start;gap:10px;padding:11px 14px 10px;cursor:pointer;user-select:none}
+.card-header:hover{background:var(--color-background-secondary)}
+.badge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;line-height:1.4}
+.card-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.chevron{width:14px;height:14px;flex-shrink:0;transition:transform .18s;margin-top:2px}
+.chevron.open{transform:rotate(90deg)}
+.card-body{border-top:0.5px solid var(--color-border-tertiary);padding:12px 14px}
+.prompt-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px}
+.prompt-box{font-family:var(--font-mono);font-size:11.5px;line-height:1.65;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px 12px;color:var(--color-text-primary);white-space:pre-wrap;word-break:break-word;margin-bottom:10px}
+.copy-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:4px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.copy-btn:hover{background:var(--color-background-secondary)}
+.copy-btn.copied{color:var(--color-text-success);border-color:var(--color-border-success)}
+.tip{font-size:11px;color:var(--color-text-secondary);margin-top:8px;padding:7px 10px;background:var(--color-background-secondary);border-radius:6px;line-height:1.5}
+.tip strong{font-weight:500;color:var(--color-text-primary)}
+</style>
+
+<h2 class="sr-only">Cursor prompts for sentinel.ai Day 4 development tasks — long-term memory, Google Drive MCP, monitoring loop, and Dashboard UI — with copy buttons</h2>
+
+<div class="wrap">
+
+<div class="phase-label">Start of day — prep</div>
+
+<div class="card" id="c0">
+<div class="card-header" onclick="tog('c0')">
+<span class="badge" style="background:#D3D1C7;color:#444441">Prompt 0</span>
+<div style="flex:1">
+<div class="card-title">Start-of-day checks + install new dependencies</div>
+<div class="card-sub">Verify Day 3 checkpoint, install APScheduler and httpx</div>
+</div>
+<svg class="chevron open" id="chev-c0" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c0">
+<div class="prompt-label">Cursor prompt — paste into Cursor chat</div>
+<div class="prompt-box" id="p0">Before writing any Day 4 code, run these checks and install new dependencies.
+
+Check 1 — confirm the backend server starts cleanly:
+  cd sentinel.ai/backend
+  uvicorn api.main:app --reload
+  Look for any import errors. The server must reach "Application startup complete" before continuing.
+
+Check 2 — confirm the Day 3 HITL flow still works. Run this curl command and confirm you get a non-empty actions list:
+  curl http://localhost:8000/actions
+
+Check 3 — confirm Supabase has data in these tables: documents, chunks, actions, agent_steps. Open Supabase Table Editor and verify each has rows.
+
+If all three checks pass, install the two new Python packages needed for Day 4:
+  pip install apscheduler httpx
+
+apscheduler: runs the background monitoring loop on a schedule
+httpx: makes async HTTP calls to the Google Drive MCP server
+
+After installing, run pip list and confirm both appear.
+
+Also create these two empty files now so Python treats the folders as packages:
+  touch sentinel.ai/backend/memory/__init__.py
+  touch sentinel.ai/backend/mcp/__init__.py</div>
+<button class="copy-btn" onclick="cp('p0',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>Do not skip the Day 3 check.</strong> Day 4 wires memory into the HITL approval endpoints — if those endpoints are broken, every memory write will silently fail and the bug will be very hard to trace.</div>
+</div>
+</div>
+
+<div class="phase-label">Hour 1 — long-term memory module</div>
+
+<div class="card" id="c1a">
+<div class="card-header" onclick="tog('c1a')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1A</span>
+<div style="flex:1">
+<div class="card-title">Create backend/memory/long_term.py — LongTermMemory class</div>
+<div class="card-sub">5 methods: store vendor, preference, outcome + recall vendor, preferences</div>
+</div>
+<svg class="chevron open" id="chev-c1a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c1a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1a">Create the file sentinel.ai/backend/memory/long_term.py for the sentinel.ai project.
+
+This module provides persistent memory storage across sessions. It reads from and writes to the Supabase "memory" table (created on Day 1) and uses voyageai embeddings for semantic recall.
+
+Imports:
+  import os, json
+  from datetime import datetime, timezone
+  from voyageai import voyageai
+  from api.db import supabase
+  from dotenv import load_dotenv
+  load_dotenv()
+  voyageai = voyageai(api_key=os.getenv("voyageai_API_KEY"))
+
+Helper function (module-level, not a method):
+  def _embed(text: str) -> list[float]:
+    Call voyageai.embeddings.create(model="voyage-4-large", input=[text])
+    Return response.data[0].embedding
+
+Implement the class LongTermMemory with these five async methods:
+
+Method 1 — async def store_vendor_observation(self, user_id: str, vendor: str, observation: dict) -> str:
+  Insert a row into the memory table:
+    user_id: user_id
+    memory_type: "vendor"
+    key: vendor.lower().strip()
+    value: observation dict (json)
+    embedding: _embed(f"{vendor}: {json.dumps(observation)}")
+    created_at and updated_at: datetime.now(timezone.utc).isoformat()
+  Return the inserted row id.
+  Observation dict should contain at minimum: {"event": str, "detail": str, "date": str}
+
+Method 2 — async def store_user_preference(self, user_id: str, context: str, decision: str, outcome: str) -> str:
+  Insert a row:
+    memory_type: "preference"
+    key: context.lower().strip()
+    value: {"decision": decision, "outcome": outcome, "context": context}
+    embedding: _embed(f"{context} {decision} {outcome}")
+  Return the inserted row id.
+
+Method 3 — async def store_outcome(self, user_id: str, action_id: str, result: str, financial_impact: float = 0.0) -> str:
+  Insert a row:
+    memory_type: "outcome"
+    key: action_id
+    value: {"result": result, "financial_impact": financial_impact, "action_id": action_id}
+    embedding: _embed(f"outcome {result} financial impact {financial_impact}")
+  Return the inserted row id.
+
+Method 4 — async def recall_vendor_history(self, user_id: str, vendor: str) -> list:
+  Query the memory table: user_id=user_id, memory_type="vendor", key=vendor.lower().strip()
+  Order by created_at descending, limit 10.
+  Return result.data or [].
+
+Method 5 — async def recall_relevant_preferences(self, user_id: str, context: str) -> list:
+  Embed the context string.
+  Call supabase.rpc("match_memory", {"query_embedding": embedding, "match_threshold": 0.65, "match_count": 5, "p_user_id": user_id, "p_memory_type": "preference"}).execute()
+  Return result.data or [].
+  Note: the match_memory RPC function will be created in the next prompt.
+
+All five methods must wrap Supabase calls in try/except. On any exception, print the error with a [Memory] prefix and return [] or "" without raising.</div>
+<button class="copy-btn" onclick="cp('p1a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c1b">
+<div class="card-header" onclick="tog('c1b')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1B</span>
+<div style="flex:1">
+<div class="card-title">Create match_memory RPC function in Supabase</div>
+<div class="card-sub">Vector search over memory table filtered by user and memory type</div>
+</div>
+<svg class="chevron open" id="chev-c1b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c1b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1b">I need to run SQL in the Supabase SQL Editor to create a vector search function for the memory table.
+
+Open Supabase dashboard > SQL Editor > New query, then paste and run this SQL:
+
+  create or replace function match_memory(
+    query_embedding vector(1024),
+    match_threshold float,
+    match_count int,
+    p_user_id text,
+    p_memory_type text default null
+  )
+  returns table (
+    id uuid,
+    user_id text,
+    memory_type text,
+    key text,
+    value jsonb,
+    similarity float,
+    created_at timestamptz
+  )
+  language sql stable
+  as $$
+    select
+      id,
+      user_id,
+      memory_type,
+      key,
+      value,
+      1 - (embedding <=> query_embedding) as similarity,
+      created_at
+    from memory
+    where
+      user_id = p_user_id
+      and (p_memory_type is null or memory_type = p_memory_type)
+      and embedding is not null
+      and 1 - (embedding <=> query_embedding) > match_threshold
+    order by embedding <=> query_embedding
+    limit match_count;
+  $$;
+
+After running, confirm the function appears under Supabase dashboard > Database > Functions.
+
+Then test the LongTermMemory class from a Python shell:
+  python
+  >>> import asyncio
+  >>> from memory.long_term import LongTermMemory
+  >>> mem = LongTermMemory()
+  >>> asyncio.run(mem.store_vendor_observation("dev", "TestGym", {"event": "price_increase", "detail": "Monthly fee rose from £30 to £40", "date": "2025-01-01"}))
+  >>> history = asyncio.run(mem.recall_vendor_history("dev", "TestGym"))
+  >>> print(history)
+
+Expected: a list with one dict showing the stored observation.</div>
+<button class="copy-btn" onclick="cp('p1b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>Run the shell test before moving on.</strong> If recall_vendor_history returns an empty list after storing, check that the memory table has the row in Supabase Table Editor. If it has the row but embedding is null, the _embed() helper is not being called correctly in store_vendor_observation.</div>
+</div>
+</div>
+
+<div class="card" id="c1c">
+<div class="card-header" onclick="tog('c1c')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1C</span>
+<div style="flex:1">
+<div class="card-title">Wire memory writes into the HITL approve and reject endpoints</div>
+<div class="card-sub">Edit backend/api/actions.py — every approval decision writes a preference</div>
+</div>
+<svg class="chevron open" id="chev-c1c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c1c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1c">Edit sentinel.ai/backend/api/actions.py to wire long-term memory writes into the HITL approval endpoints.
+
+The file already has PUT /actions/{id}/approve and PUT /actions/{id}/reject. Update both as follows.
+
+Add this import at the top of the file:
+  from memory.long_term import LongTermMemory
+  memory = LongTermMemory()
+
+Update PUT /actions/{action_id}/approve:
+  After setting status="approved" in Supabase, fetch the action's vendor_name from the related documents table (join on document_id).
+  Then call (do not await — fire and forget using asyncio.create_task if inside async, or just call without await for now):
+    await memory.store_user_preference(
+        user_id="dev",
+        context=f"{vendor_name} {action_type}",
+        decision="approved",
+        outcome="user approved the proposed action"
+    )
+    await memory.store_vendor_observation(
+        user_id="dev",
+        vendor=vendor_name,
+        observation={"event": "action_approved", "action_type": action_type, "date": datetime.now().isoformat()}
+    )
+
+Update PUT /actions/{action_id}/reject:
+  After setting status="rejected", do the same memory writes but with decision="rejected" and pass the rejection reason (from the request body) as part of the outcome string.
+
+Also update POST /actions/{action_id}/send:
+  After a successful send, call:
+    await memory.store_outcome(
+        user_id="dev",
+        action_id=action_id,
+        result="letter_sent",
+        financial_impact=0.0
+    )
+
+Import datetime at the top of the file if not already present.
+Do not change any other logic in the endpoints.</div>
+<button class="copy-btn" onclick="cp('p1c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="phase-label">Hours 2–3 — Google Drive MCP integration</div>
+
+<div class="card" id="c2a">
+<div class="card-header" onclick="tog('c2a')">
+<span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 2A</span>
+<div style="flex:1">
+<div class="card-title">Create backend/mcp/google_drive.py — Drive MCP client</div>
+<div class="card-sub">list_new_documents(), fetch_document(), helper to call the MCP server</div>
+</div>
+<svg class="chevron open" id="chev-c2a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c2a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p2a">Create the file sentinel.ai/backend/mcp/google_drive.py for the sentinel.ai project.
+
+This module calls the Google Drive MCP server to list and download documents. The MCP server URL is https://drivemcp.googleapis.com/mcp/v1 — this is the connected Google Drive MCP from the user's Claude account.
+
+Imports:
+  import os, httpx, base64
+  from datetime import datetime, timezone
+  from dotenv import load_dotenv
+  load_dotenv()
+
+  MCP_URL = "https://drivemcp.googleapis.com/mcp/v1"
+
+The MCP server uses the standard MCP tool-call format. Implement a low-level helper first:
+
+async def _call_mcp_tool(tool_name: str, tool_input: dict) -> dict:
+  Use httpx.AsyncClient() to POST to MCP_URL + "/tools/call".
+  Request body: {"name": tool_name, "input": tool_input}
+  Headers: {"Content-Type": "application/json"}
+  Timeout: 30 seconds.
+  On success (status 200): return response.json()
+  On HTTP error or timeout: print the error with a [Drive MCP] prefix and return {"error": str(e), "content": []}
+
+Then implement three public functions:
+
+async def list_new_documents(since: datetime, folder_id: str = None) -> list:
+  Call _call_mcp_tool("gdrive_search", {
+      "query": "mimeType='application/pdf' OR mimeType='application/vnd.openxmlformats-officedocument.wordprocessingml.document'",
+      "page_size": 20
+  })
+  Parse the result: the MCP response has a "content" list. Find the first item with type="text" and parse its text as JSON.
+  Filter the file list to only include files where modifiedTime > since.isoformat()
+  Return a list of dicts, each with: id, name, mimeType, modifiedTime.
+  If parsing fails or the result is empty, return [].
+
+async def fetch_document(file_id: str, filename: str) -> bytes:
+  Call _call_mcp_tool("gdrive_read_file", {"file_id": file_id})
+  The response content will be a base64-encoded string in the first content item.
+  Decode it: base64.b64decode(content_text)
+  Return the raw bytes.
+  On any error, return b"" (empty bytes).
+
+async def get_last_sync_time(user_id: str) -> datetime:
+  Query the Supabase "memory" table for the most recent row where memory_type="drive_sync" and user_id=user_id.
+  If found, parse value["last_sync"] as a datetime and return it.
+  If not found, return datetime(2025, 1, 1, tzinfo=timezone.utc) as a default start date.
+
+async def set_last_sync_time(user_id: str) -> None:
+  Upsert a row into the Supabase "memory" table:
+    user_id=user_id, memory_type="drive_sync", key="last_sync"
+    value={"last_sync": datetime.now(timezone.utc).isoformat()}</div>
+<button class="copy-btn" onclick="cp('p2a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>The Google Drive MCP is already connected</strong> in the user's Claude account at https://drivemcp.googleapis.com/mcp/v1. This module calls it directly via HTTP — no OAuth setup needed because authentication is handled by the MCP server. If _call_mcp_tool returns a 401, the MCP connection may need to be re-authorised in the Claude settings.</div>
+</div>
+</div>
+
+<div class="card" id="c2b">
+<div class="card-header" onclick="tog('c2b')">
+<span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 2B</span>
+<div style="flex:1">
+<div class="card-title">Add POST /sync/drive endpoint to main.py</div>
+<div class="card-sub">Manual sync trigger — lists new Drive files, ingests each one</div>
+</div>
+<svg class="chevron open" id="chev-c2b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c2b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p2b">Edit sentinel.ai/backend/api/main.py to add a manual Drive sync endpoint.
+
+Add these imports at the top (with the other imports):
+  from mcp.google_drive import list_new_documents, fetch_document, get_last_sync_time, set_last_sync_time
+
+Add this new endpoint below the existing /analyse endpoint:
+
+@app.post("/sync/drive")
+async def sync_drive(user_id: str = "dev"):
+  """
+  Manually triggers a Google Drive sync.
+  Finds PDFs and DOCX files modified since the last sync,
+  downloads each one, and feeds it through the ingestion pipeline.
+  """
+
+  Step 1: Get the last sync timestamp.
+    last_sync = await get_last_sync_time(user_id)
+    Print: f"[Drive Sync] Checking for documents modified since {last_sync.isoformat()}"
+
+  Step 2: List new documents from Drive.
+    new_files = await list_new_documents(since=last_sync)
+    Print: f"[Drive Sync] Found {len(new_files)} new files"
+
+  Step 3: For each file, download and ingest.
+    ingested = []
+    for file in new_files:
+        Print: f"[Drive Sync] Ingesting: {file['name']}"
+        file_bytes = await fetch_document(file["id"], file["name"])
+        if not file_bytes:
+            continue
+        result = await ingest_document(file_bytes, file["name"], user_id)
+        ingested.append({"filename": file["name"], "doc_id": result.get("doc_id"), "chunk_count": result.get("chunk_count")})
+
+  Step 4: Update the last sync time.
+    await set_last_sync_time(user_id)
+
+  Step 5: Return a summary.
+    return {"synced_count": len(ingested), "files": ingested, "last_sync": last_sync.isoformat()}
+
+After saving, restart the backend and test:
+  curl -X POST "http://localhost:8000/sync/drive?user_id=dev"
+
+Expected: a JSON response showing how many files were found. If you have PDFs in Google Drive, they should start ingesting. Check the backend terminal for the [Drive Sync] print statements.</div>
+<button class="copy-btn" onclick="cp('p2b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>Test with a small PDF in Google Drive first.</strong> Upload any PDF to your Google Drive, wait 1–2 minutes, then call /sync/drive. The [Drive Sync] log lines in the terminal will tell you exactly what happened. If new_files is empty but you added a file, the last_sync time may be too recent — check the memory table in Supabase and temporarily delete the drive_sync row to reset it.</div>
+</div>
+</div>
+
+<div class="phase-label">Hours 4–5 — monitoring loop</div>
+
+<div class="card" id="c3a">
+<div class="card-header" onclick="tog('c3a')">
+<span class="badge" style="background:#9FE1CB;color:#085041">Prompt 3A</span>
+<div style="flex:1">
+<div class="card-title">Create backend/agents/monitor.py — run_monitoring_cycle()</div>
+<div class="card-sub">4-step cycle: Drive sync, deadline check, stale action escalation, memory consolidation</div>
+</div>
+<svg class="chevron open" id="chev-c3a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c3a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p3a">Create the file sentinel.ai/backend/agents/monitor.py for the sentinel.ai project.
+
+This module contains the background monitoring loop that runs on a schedule and triggers analysis without user prompting. This is the architectural step that transforms sentinel.ai from a tool into an autonomous agent.
+
+Imports:
+  import asyncio
+  from datetime import datetime, timezone, timedelta
+  from api.db import supabase
+  from mcp.google_drive import list_new_documents, fetch_document, set_last_sync_time, get_last_sync_time
+  from rag.ingestion import ingest_document
+  from agents.orchestrator import orchestrate
+
+Implement these helper functions first:
+
+async def get_obligations_due_within_days(user_id: str, days: int) -> list:
+  Query the Supabase "obligations" table.
+  Filter: due_date is not null, due_date <= (today + days), status = "pending".
+  Join with documents table to get user_id, vendor_name, doc_type.
+  Filter results to only this user_id.
+  Return result.data or [].
+
+async def obligation_has_pending_action(obligation_id: str) -> bool:
+  Query the Supabase "actions" table for any row where:
+    document_id matches the obligation's document_id
+    status = "pending"
+  Return True if any row found, False otherwise.
+
+async def create_deadline_alert(obligation: dict, user_id: str) -> None:
+  Build a trigger dict from the obligation:
+    document_id, vendor_name, document_type from the obligation
+    plus a note: f"Deadline approaching: {obligation['description']} due {obligation['due_date']}"
+  Call orchestrate(trigger, user_id) to generate a risk assessment and action item.
+  Print: f"[Monitor] Created deadline alert for {obligation.get('description', 'unknown')}"
+
+async def get_stale_actions(user_id: str, days: int) -> list:
+  Query the Supabase "actions" table for rows where:
+    status = "pending"
+    created_at < (now - days)
+  Return result.data or [].
+
+async def escalate_urgency(action: dict) -> None:
+  Update the action row in Supabase: set severity = "high" if it was "medium", or "critical" if it was "high".
+  Print: f"[Monitor] Escalated urgency for action: {action.get('title', action['id'])}"
+
+Now implement the main cycle function:
+
+async def run_monitoring_cycle(user_id: str = "dev") -> dict:
+  """
+  Runs one full monitoring cycle. Called by the scheduler every 6 hours.
+  Returns a summary dict of what was done.
+  """
+
+  summary = {"drive_synced": 0, "deadline_alerts": 0, "escalated": 0, "errors": []}
+  Print: f"\n[Monitor] Starting monitoring cycle for user: {user_id}"
+
+  Step 1 — Drive sync:
+  Wrap in try/except. On any error, append to summary["errors"] and continue.
+    last_sync = await get_last_sync_time(user_id)
+    new_files = await list_new_documents(since=last_sync)
+    for file in new_files:
+        file_bytes = await fetch_document(file["id"], file["name"])
+        if file_bytes:
+            result = await ingest_document(file_bytes, file["name"], user_id)
+            summary["drive_synced"] += 1
+    await set_last_sync_time(user_id)
+    Print: f"[Monitor] Drive sync: {summary['drive_synced']} new documents"
+
+  Step 2 — Deadline alerts:
+  Wrap in try/except.
+    upcoming = await get_obligations_due_within_days(user_id, days=30)
+    for obligation in upcoming:
+        has_action = await obligation_has_pending_action(obligation.get("id"))
+        if not has_action:
+            await create_deadline_alert(obligation, user_id)
+            summary["deadline_alerts"] += 1
+    Print: f"[Monitor] Deadline alerts: {summary['deadline_alerts']} created"
+
+  Step 3 — Stale action escalation:
+  Wrap in try/except.
+    stale = await get_stale_actions(user_id, days=7)
+    for action in stale:
+        await escalate_urgency(action)
+        summary["escalated"] += 1
+    Print: f"[Monitor] Escalated: {summary['escalated']} stale actions"
+
+  Step 4 — Memory consolidation (stub for now):
+    Print: f"[Monitor] Memory consolidation: skipped (not yet implemented)"
+
+  Print: f"[Monitor] Cycle complete. Summary: {summary}"
+  Return summary</div>
+<button class="copy-btn" onclick="cp('p3a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c3b">
+<div class="card-header" onclick="tog('c3b')">
+<span class="badge" style="background:#9FE1CB;color:#085041">Prompt 3B</span>
+<div style="flex:1">
+<div class="card-title">Wire APScheduler into the FastAPI app + add /monitor/run endpoint</div>
+<div class="card-sub">Schedule loop every 6 hours on startup + manual trigger endpoint</div>
+</div>
+<svg class="chevron open" id="chev-c3b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c3b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p3b">Edit sentinel.ai/backend/api/main.py to wire in APScheduler and add a manual monitoring trigger endpoint.
+
+Add these imports at the top of main.py (with the other imports):
+  from apscheduler.schedulers.asyncio import AsyncIOScheduler
+  from agents.monitor import run_monitoring_cycle
+
+Add this code directly after the app = FastAPI() line (before the CORS middleware):
+  scheduler = AsyncIOScheduler()
+
+Add FastAPI startup and shutdown event handlers. Place these after the CORS middleware block:
+
+  @app.on_event("startup")
+  async def startup_event():
+      scheduler.add_job(
+          run_monitoring_cycle,
+          trigger="interval",
+          hours=6,
+          id="monitoring_loop",
+          replace_existing=True,
+          kwargs={"user_id": "dev"}
+      )
+      scheduler.start()
+      print("[Scheduler] Monitoring loop started — runs every 6 hours")
+
+  @app.on_event("shutdown")
+  async def shutdown_event():
+      scheduler.shutdown()
+      print("[Scheduler] Monitoring loop stopped")
+
+Then add a manual trigger endpoint below the /sync/drive endpoint:
+
+  @app.post("/monitor/run")
+  async def run_monitor(user_id: str = "dev"):
+      """Manually triggers one full monitoring cycle. Use for testing."""
+      print(f"\n[API] Manual monitoring cycle triggered for user: {user_id}")
+      summary = await run_monitoring_cycle(user_id)
+      return summary
+
+After saving, restart the backend server. You should see:
+  [Scheduler] Monitoring loop started — runs every 6 hours
+
+Then trigger a manual cycle to test:
+  curl -X POST "http://localhost:8000/monitor/run?user_id=dev"
+
+Expected response:
+  {"drive_synced": 0, "deadline_alerts": 0, "escalated": 0, "errors": []}
+(zeros are fine — it just means no new files and no upcoming deadlines yet)
+
+Check the backend terminal for the [Monitor] print statements to confirm the cycle ran.</div>
+<button class="copy-btn" onclick="cp('p3b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>on_event("startup") is deprecated in newer FastAPI versions.</strong> If Cursor generates a deprecation warning, replace it with the lifespan pattern: use <code>from contextlib import asynccontextmanager</code> and <code>@asynccontextmanager async def lifespan(app):</code>. The scheduler.start() call goes before the yield and scheduler.shutdown() goes after.</div>
+</div>
+</div>
+
+<div class="card" id="c3c">
+<div class="card-header" onclick="tog('c3c')">
+<span class="badge" style="background:#9FE1CB;color:#085041">Prompt 3C</span>
+<div style="flex:1">
+<div class="card-title">Add GET /dashboard/summary endpoint</div>
+<div class="card-sub">Aggregates domain stats, open actions, upcoming deadlines, financial exposure</div>
+</div>
+<svg class="chevron open" id="chev-c3c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c3c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p3c">Add a new endpoint to sentinel.ai/backend/api/main.py that the Dashboard UI will call to load its data.
+
+@app.get("/dashboard/summary")
+async def dashboard_summary(user_id: str = "dev"):
+  """
+  Returns aggregated compliance data for the Dashboard UI.
+  Queries documents, obligations, and actions tables.
+  """
+
+  Step 1 — Documents by domain:
+  Query supabase.table("documents").select("domain, doc_type, vendor_name, expiry_date, risk_score, status").eq("user_id", user_id).execute()
+  Group by domain. For each of the five domains (subscription, employment, tax, gdpr, housing), produce:
+    {"domain": str, "doc_count": int, "avg_risk": float or null, "status": "green"|"amber"|"red"}
+  Status logic: red if any doc in that domain has risk_score >= 7, amber if any >= 4, green otherwise.
+
+  Step 2 — Open actions count and severity breakdown:
+  Query supabase.table("actions").select("severity, status").execute()
+  Count rows where status = "pending". Group by severity.
+  Produce: {"total_pending": int, "critical": int, "high": int, "medium": int, "low": int}
+
+  Step 3 — Upcoming obligations (next 90 days):
+  Query supabase.table("obligations").select("description, due_date, obligation_type, financial_amount, currency, document_id").execute()
+  Filter to rows where due_date is not null and due_date <= (today + 90 days).
+  Sort by due_date ascending.
+  Join with documents table to get vendor_name for each obligation.
+  Return up to 20 items.
+
+  Step 4 — Financial exposure:
+  Sum the financial_amount field across all obligations where status = "pending" and financial_amount is not null.
+  Also sum financial_amount from open actions (severity high or critical).
+  Return total as a float.
+
+  Step 5 — Return combined response:
+    {
+      "domains": [...],
+      "actions_summary": {...},
+      "upcoming_obligations": [...],
+      "financial_exposure_gbp": float,
+      "total_documents": int,
+      "last_updated": datetime.now().isoformat()
+    }
+
+Wrap all four Supabase queries in a try/except. On error, return the partial data collected so far rather than a 500.</div>
+<button class="copy-btn" onclick="cp('p3c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="phase-label">Hours 6–7 — Dashboard UI</div>
+
+<div class="card" id="c4a">
+<div class="card-header" onclick="tog('c4a')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4A</span>
+<div style="flex:1">
+<div class="card-title">Create frontend/src/pages/Dashboard.jsx — page shell + summary banner</div>
+<div class="card-sub">Fetch /dashboard/summary on mount, financial exposure banner, loading state</div>
+</div>
+<svg class="chevron open" id="chev-c4a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c4a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4a">Create the file sentinel.ai/frontend/src/pages/Dashboard.jsx for the sentinel.ai project.
+
+This is the product's front door — the first page the user sees. It calls GET /dashboard/summary and renders a compliance health overview.
+
+State:
+- summary: object (null initially) — the full response from /dashboard/summary
+- loading: boolean
+- error: string or null
+- syncing: boolean — true while POST /sync/drive is in flight
+
+On mount: call GET http://localhost:8000/dashboard/summary using axios. Store in summary, set loading = false.
+
+Add a handleSync function:
+  Set syncing = true.
+  POST to http://localhost:8000/sync/drive.
+  On success: re-fetch the summary and set syncing = false.
+  On error: set error and syncing = false.
+
+Rendering (Tailwind CSS, max-w-5xl mx-auto px-6 py-6):
+
+Section 1 — Summary banner:
+  Show a top banner card (bg-white border rounded-lg p-5 mb-6 flex justify-between items-center).
+  Left side: "3 issues need your attention" (use summary.actions_summary.total_pending for the count, text-lg font-medium).
+  Show "Estimated financial exposure: £{summary.financial_exposure_gbp.toFixed(2)}" below it in text-sm text-gray-600.
+  Right side: a "Sync Drive" button (border rounded-lg px-4 py-2 text-sm) that calls handleSync. Show "Syncing..." when syncing = true.
+
+Section 2 — Domain tiles (render below the banner):
+  Import and render DomainTile components (create in next prompt).
+  Use a responsive grid: grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6.
+  Map over summary.domains and pass each as a prop.
+
+Section 3 — Upcoming obligations timeline:
+  Show a section heading "Next 90 days" (text-lg font-medium mb-3).
+  Map over summary.upcoming_obligations (up to 10 items).
+  Each row: flex items-center gap-3 py-2 border-b border-gray-100.
+    Left: due_date formatted as "DD MMM" (use new Date(item.due_date).toLocaleDateString("en-GB", {day: "2-digit", month: "short"}) in a text-sm text-gray-500 w-16 flex-shrink-0.
+    Middle: vendor_name (font-medium text-sm) + " · " + description (text-sm text-gray-500).
+    Right: obligation_type badge (text-xs px-2 py-0.5 rounded-full — use bg-blue-100 text-blue-800 for renewal, bg-red-100 text-red-800 for cancellation, bg-gray-100 text-gray-700 for others).
+
+Show loading spinner ("Loading dashboard...") while loading = true.
+Show error message if error is set.
+
+Export as default.</div>
+<button class="copy-btn" onclick="cp('p4a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4b">
+<div class="card-header" onclick="tog('c4b')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4B</span>
+<div style="flex:1">
+<div class="card-title">Create frontend/src/components/DomainTile.jsx</div>
+<div class="card-sub">Status-coloured tile: doc count, open actions, most urgent deadline</div>
+</div>
+<svg class="chevron open" id="chev-c4b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c4b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4b">Create the file sentinel.ai/frontend/src/components/DomainTile.jsx for the sentinel.ai project.
+
+This component renders a single compliance domain tile. It receives a "domain" prop with shape:
+  { domain: str, doc_count: int, avg_risk: float|null, status: "green"|"amber"|"red", open_actions: int }
+
+Status colour mapping (use for the left border accent and status dot):
+  green:  border-green-400, bg-green-400
+  amber:  border-amber-400, bg-amber-400
+  red:    border-red-400,   bg-red-400
+
+Domain display names (map programmatically):
+  subscription → "Subscriptions"
+  employment   → "Employment"
+  tax          → "Tax"
+  gdpr         → "GDPR / Privacy"
+  housing      → "Housing"
+
+Domain icons (render as simple text character in a small circle, not emoji — use first letter):
+  subscription → "S", employment → "E", tax → "T", gdpr → "G", housing → "H"
+
+Tile layout (bg-white border-l-4 rounded-lg p-4 border border-gray-100):
+  Top row: domain icon circle (w-8 h-8, bg-gray-100 rounded-full, text-xs font-medium, flex items-center justify-center) + domain display name (font-medium text-sm ml-2) + status dot (w-2 h-2 rounded-full ml-auto, colour from status mapping).
+  Middle: three small stat rows (mt-3 space-y-1):
+    "Documents" — domain.doc_count
+    "Open actions" — domain.open_actions (show in red text if > 0)
+    "Risk score" — domain.avg_risk?.toFixed(1) ?? "—" out of 10
+  Bottom: if status is "red" or "amber", show a small "View actions" text link (text-xs text-blue-600 mt-3 block) that calls sendPrompt to ask about this domain.
+
+sendPrompt call: sendPrompt(`Show me open actions for the ${domainDisplayName} domain`)
+
+Apply the left border colour using the status: className={`bg-white border-l-4 ${borderColour} rounded-lg p-4 border border-gray-100`}
+
+Export as default.</div>
+<button class="copy-btn" onclick="cp('p4b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4c">
+<div class="card-header" onclick="tog('c4c')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4C</span>
+<div style="flex:1">
+<div class="card-title">Add Dashboard as the default tab in App.js</div>
+<div class="card-sub">Make Dashboard the first tab — shift Vault, Action Queue, Chat, Activity Log</div>
+</div>
+<svg class="chevron open" id="chev-c4c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c4c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4c">Edit sentinel.ai/frontend/src/App.js.
+
+Add Dashboard as the new default (first) tab. The existing tabs should remain in this order: Dashboard, Document vault, Action queue, Chat, Activity log.
+
+Changes needed:
+1. Import Dashboard from "./pages/Dashboard"
+2. Change the initial page state from "vault" to "dashboard"
+3. Add a "Dashboard" tab button as the first item in the nav bar (onclick sets page to "dashboard")
+4. Render Dashboard when page === "dashboard"
+5. Keep all existing tabs and their render conditions unchanged
+
+The nav bar will now have 5 tabs. To keep it from becoming too wide on small screens, reduce the tab text size to text-sm and gap to gap-4.
+
+Do not change any other logic. Keep the file under 40 lines.</div>
+<button class="copy-btn" onclick="cp('p4c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4d">
+<div class="card-header" onclick="tog('c4d')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4D</span>
+<div style="flex:1">
+<div class="card-title">End-of-day checkpoint test</div>
+<div class="card-sub">Drive sync, monitoring cycle, Dashboard with live data, memory verification</div>
+</div>
+<svg class="chevron open" id="chev-c4d" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-c4d">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4d">Walk me through the Day 4 end-to-end checkpoint. Both servers must be running.
+
+Test 1 — Google Drive sync:
+  Upload a PDF to Google Drive (any contract or document).
+  Wait 1–2 minutes for Google Drive to register the file.
+  Click "Sync Drive" in the Dashboard UI, or call:
+    curl -X POST "http://localhost:8000/sync/drive?user_id=dev"
+  Expected: backend terminal shows [Drive Sync] log lines. The document appears in the Document Vault.
+
+Test 2 — Monitoring loop runs without errors:
+  Call the manual trigger:
+    curl -X POST "http://localhost:8000/monitor/run?user_id=dev"
+  Expected response: {"drive_synced": N, "deadline_alerts": 0, "escalated": 0, "errors": []}
+  The errors list must be empty. If it is not, show me the error content.
+
+Test 3 — Dashboard shows real data:
+  Open http://localhost:3000. The Dashboard tab should load by default.
+  Expected: domain tiles appear showing your ingested documents grouped by domain.
+  The summary banner should show the total pending actions count.
+  The upcoming obligations section should show any due dates extracted from your documents.
+  If all tiles show 0 documents, the /dashboard/summary endpoint is not finding your documents — check that the documents table has rows in Supabase.
+
+Test 4 — Memory is storing HITL decisions:
+  Open the Action Queue tab. Find a pending action.
+  Click Reject (or Approve). Go to Supabase Table Editor > memory.
+  Expected: one or more new rows with memory_type = "preference" or "vendor" and non-null embedding.
+  If no rows appear, check the backend terminal for [Memory] error messages.
+
+Day 4 is complete when all four tests pass.</div>
+<button class="copy-btn" onclick="cp('p4d',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="phase-label">Fix-up prompts — use only if something breaks</div>
+
+<div class="card" id="fix1">
+<div class="card-header" onclick="tog('fix1')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up A</span>
+<div style="flex:1">
+<div class="card-title">APScheduler causes "RuntimeError: no running event loop" on startup</div>
+<div class="card-sub">Replace on_event with the modern FastAPI lifespan pattern</div>
+</div>
+<svg class="chevron open" id="chev-fix1" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-fix1">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix1">The FastAPI backend is throwing "RuntimeError: no running event loop" when starting, caused by APScheduler's AsyncIOScheduler conflicting with the on_event("startup") pattern.
+
+Edit sentinel.ai/backend/api/main.py to replace the on_event handlers with the modern FastAPI lifespan pattern.
+
+Replace the current scheduler setup and on_event blocks with:
+
+  from contextlib import asynccontextmanager
+  from apscheduler.schedulers.asyncio import AsyncIOScheduler
+  from agents.monitor import run_monitoring_cycle
+
+  scheduler = AsyncIOScheduler()
+
+  @asynccontextmanager
+  async def lifespan(app):
+      scheduler.add_job(
+          run_monitoring_cycle,
+          trigger="interval",
+          hours=6,
+          id="monitoring_loop",
+          replace_existing=True,
+          kwargs={"user_id": "dev"}
+      )
+      scheduler.start()
+      print("[Scheduler] Monitoring loop started — runs every 6 hours")
+      yield
+      scheduler.shutdown()
+      print("[Scheduler] Monitoring loop stopped")
+
+  app = FastAPI(lifespan=lifespan)
+
+Remove the old @app.on_event("startup") and @app.on_event("shutdown") decorators entirely.
+The app = FastAPI() line must now use lifespan=lifespan.
+Keep all other endpoints unchanged.</div>
+<button class="copy-btn" onclick="cp('pfix1',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix2">
+<div class="card-header" onclick="tog('fix2')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up B</span>
+<div style="flex:1">
+<div class="card-title">Google Drive MCP returns 401 or empty file list</div>
+<div class="card-sub">MCP auth check + fallback to manual file upload for testing</div>
+</div>
+<svg class="chevron open" id="chev-fix2" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-fix2">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix2">POST /sync/drive returns an empty file list or a 401 error from the Google Drive MCP.
+
+Diagnose and fix by following these steps in order:
+
+Step 1 — Add a diagnostic endpoint to test the MCP connection directly:
+  Add to main.py:
+  @app.get("/debug/drive")
+  async def debug_drive():
+      from mcp.google_drive import _call_mcp_tool
+      result = await _call_mcp_tool("gdrive_search", {"query": "mimeType='application/pdf'", "page_size": 5})
+      return result
+
+  Call it: curl http://localhost:8000/debug/drive
+  Check the response for error messages.
+
+Step 2 — If the response contains "401" or "unauthorized":
+  The Google Drive MCP connection needs to be re-authorised. Tell me to go to claude.ai Settings > Integrations > Google Drive and click "Reconnect". After reconnecting, retry the debug endpoint.
+
+Step 3 — If the response is valid but returns 0 files:
+  The query may not match your Drive files. Edit the query in list_new_documents() to be broader:
+    "query": "" (empty string lists all accessible files)
+  Check that you have PDFs in your Google Drive root or a shared folder the MCP can access.
+
+Step 4 — If the MCP is completely unreachable (connection refused):
+  As a fallback for testing, modify run_monitoring_cycle() in monitor.py to skip the Drive sync step gracefully:
+    try:
+        new_files = await list_new_documents(since=last_sync)
+    except Exception as e:
+        print(f"[Monitor] Drive sync skipped: {e}")
+        new_files = []
+  This allows the rest of the monitoring cycle (deadline alerts and escalation) to run even when Drive is unavailable.</div>
+<button class="copy-btn" onclick="cp('pfix2',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix3">
+<div class="card-header" onclick="tog('fix3')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up C</span>
+<div style="flex:1">
+<div class="card-title">Dashboard shows blank tiles or "0 documents" in every domain</div>
+<div class="card-sub">/dashboard/summary query or domain grouping is not working</div>
+</div>
+<svg class="chevron open" id="chev-fix3" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-fix3">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix3">The Dashboard tiles all show 0 documents even though the Supabase documents table has rows.
+
+Diagnose by checking these things in order:
+
+Step 1 — Test the raw endpoint:
+  curl "http://localhost:8000/dashboard/summary?user_id=dev"
+  Check the "domains" array in the response. If doc_count is 0 for all domains, the grouping logic is wrong.
+
+Step 2 — Check that documents have a domain value:
+  In Supabase Table Editor > documents, look at the "domain" column. If it is null for your documents, the classify_document function on Day 1 did not extract the domain field.
+  Fix: In the /dashboard/summary endpoint, change the domain grouping to also count documents where domain IS NULL under a "subscription" fallback:
+    if not domain: domain = "subscription"
+
+Step 3 — Check the user_id filter:
+  The query filters by user_id = "dev". If documents were ingested with a different user_id, they will not appear.
+  In Supabase Table Editor > documents, check the user_id column. If it shows something other than "dev", temporarily remove the user_id filter from the /dashboard/summary query for testing.
+
+Step 4 — If the domains array is correct in the API response but the UI shows 0:
+  The Dashboard.jsx component may not be passing the domains array to DomainTile correctly.
+  Add a console.log(summary) in the Dashboard useEffect to check what the API returned.
+  Confirm that summary.domains is an array and each object has a "domain" key matching the mapping in DomainTile.</div>
+<button class="copy-btn" onclick="cp('pfix3',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix4">
+<div class="card-header" onclick="tog('fix4')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up D</span>
+<div style="flex:1">
+<div class="card-title">Memory writes silently failing — no rows in memory table</div>
+<div class="card-sub">Supabase upsert issue or missing embedding on memory rows</div>
+</div>
+<svg class="chevron open" id="chev-fix4" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body" id="body-fix4">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix4">After approving or rejecting an action, no new rows appear in the Supabase memory table. The memory writes are silently failing.
+
+Diagnose and fix by following these steps:
+
+Step 1 — Remove the silent error suppression temporarily.
+  In sentinel.ai/backend/memory/long_term.py, in the store_user_preference method, change the except block from just printing to also re-raising:
+    except Exception as e:
+        print(f"[Memory] Error in store_user_preference: {e}")
+        raise  # temporarily re-raise to see the full traceback
+  Then trigger an approval and check the backend terminal for the full error.
+
+Step 2 — Common cause: the embedding call fails because voyageai_API_KEY is not loaded.
+  Add a print at the top of _embed():
+    print(f"[Memory] Embedding text of length {len(text)}")
+  If this does not print, _embed() is never being called.
+  Check that load_dotenv() is called at the top of long_term.py and that voyageai_API_KEY is in backend/.env.
+
+Step 3 — Common cause: the Supabase insert fails because the embedding column type mismatch.
+  The memory table's embedding column is vector(1024). The value being inserted must be a plain Python list of 1024 floats — not a string, not a numpy array.
+  In store_user_preference, add before the insert:
+    assert isinstance(embedding, list), f"Expected list, got {type(embedding)}"
+    assert len(embedding) == 1024, f"Expected 1024 dims, got {len(embedding)}"
+
+Step 4 — Once you have identified and fixed the root cause, remove the raise and assert lines, and restore the silent except pattern so memory failures never crash the HITL endpoints.</div>
+<button class="copy-btn" onclick="cp('pfix4',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 011-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+</div>
+
+<script>
+function tog(id){
+  const b=document.getElementById('body-'+id);
+  const c=document.getElementById('chev-'+id);
+  const open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  c.classList.toggle('open',!open);
+}
+function cp(id,btn){
+  const text=document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.innerHTML;
+    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied';
+    btn.classList.add('copied');
+    setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copied');},2000);
+  }).catch(()=>{btn.textContent='Select text above and copy manually';});
+}
+</script>

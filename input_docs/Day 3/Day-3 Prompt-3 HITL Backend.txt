@@ -1,0 +1,46 @@
+Create the file backend/api/actions.py for the PCGA project.
+
+This file is a FastAPI router containing all six HITL action queue endpoints. Use the Supabase client from api.db (already exists at backend/api/db.py as "supabase").
+
+Router setup:
+  from fastapi import APIRouter, HTTPException
+  from pydantic import BaseModel
+  router = APIRouter(prefix="/actions", tags=["actions"])
+
+Implement these six endpoints:
+
+1. GET /actions
+   Query the Supabase "actions" table for rows where status = "pending".
+   Also join with the "documents" table to get vendor_name and doc_type for each action.
+   Sort results: critical first, then high, medium, low.
+   Return a list of summary objects (id, severity, title, summary, vendor_name, doc_type, created_at, escalate). Do NOT include draft_content in the list response.
+
+2. GET /actions/{action_id}
+   Return the full action row by UUID including: id, severity, title, summary, draft_content, reasoning, sources, warnings, escalate, escalation_reason, status, created_at.
+   Also return vendor_name and doc_type from the joined documents table.
+   Return 404 if not found.
+
+3. PUT /actions/{action_id}/approve
+   Set status = "approved" and actioned_at = now() on the actions row.
+   Then call store_preference() from memory.long_term (create a stub if the module does not exist yet — just log the call for now).
+   Return the updated action row.
+
+4. PUT /actions/{action_id}/reject
+   Accept an optional JSON body: {"reason": "string"}.
+   Set status = "rejected" and actioned_at = now().
+   If a reason is provided, append it to the reasoning field.
+   Call store_preference() stub.
+   Return the updated action row.
+
+5. PUT /actions/{action_id}/edit
+   Accept JSON body: {"draft_content": "string"}.
+   Update only the draft_content field. Status stays "pending".
+   Return the updated action row.
+
+6. POST /actions/{action_id}/send
+   IMPORTANT SAFETY GATE: First check that the action's status is exactly "approved". If it is not, raise HTTPException(status_code=403, detail="Action must be approved before sending").
+   If approved, call send_letter() from api.email (create the module in the next step — for now import it and wrap the call in a try/except).
+   On success: set status = "sent", actioned_at = now(). Return {"status": "sent", "action_id": action_id}.
+   On failure: do NOT change the status. Return {"status": "error", "detail": str(error)}.
+
+Use async def for all endpoints. Import supabase from api.db. Add proper type hints throughout.

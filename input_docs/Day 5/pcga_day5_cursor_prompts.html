@@ -1,0 +1,1122 @@
+bash
+
+cat << 'HTMLEOF' > /mnt/user-data/outputs/sentinel.ai_Day5_Cursor_Prompts.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>sentinel.ai Day 5 — Cursor Prompts</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a18;padding:24px 16px;min-height:100vh}
+.page{max-width:780px;margin:0 auto}
+.page-header{margin-bottom:28px}
+.page-title{font-size:20px;font-weight:500;color:#1a1a18;margin-bottom:4px}
+.page-sub{font-size:13px;color:#6b6b67}
+.progress-wrap{background:#e0ddd4;border-radius:4px;height:6px;margin:14px 0 6px;overflow:hidden}
+.progress-fill{height:6px;border-radius:4px;background:#3B6D11;transition:width .35s ease}
+.progress-label{font-size:12px;color:#6b6b67;display:flex;justify-content:space-between;margin-bottom:20px}
+.phase-label{font-size:10px;font-weight:600;color:#6b6b67;letter-spacing:.07em;text-transform:uppercase;margin:20px 0 6px}
+.phase-label:first-of-type{margin-top:0}
+.card{background:#fff;border:0.5px solid #d8d5cc;border-radius:10px;margin-bottom:8px;overflow:hidden}
+.card-header{display:flex;align-items:flex-start;gap:10px;padding:11px 14px 10px;cursor:pointer;user-select:none}
+.card-header:hover{background:#f9f8f5}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.card-title{font-size:13px;font-weight:500;color:#1a1a18;flex:1;line-height:1.4}
+.card-sub{font-size:11px;color:#6b6b67;margin-top:2px;line-height:1.4}
+.chevron{width:14px;height:14px;flex-shrink:0;transition:transform .18s;margin-top:2px;color:#6b6b67}
+.chevron.open{transform:rotate(90deg)}
+.card-body{border-top:0.5px solid #e8e5dc;padding:12px 14px;display:none}
+.card-body.open{display:block}
+.prompt-label{font-size:11px;font-weight:500;color:#6b6b67;margin-bottom:6px}
+.prompt-box{font-family:'SF Mono','Fira Code',Consolas,monospace;font-size:11.5px;line-height:1.65;background:#f5f5f0;border:0.5px solid #d8d5cc;border-radius:8px;padding:10px 12px;color:#1a1a18;white-space:pre-wrap;word-break:break-word;margin-bottom:10px;max-height:420px;overflow-y:auto}
+.copy-btn{font-size:12px;color:#6b6b67;background:none;border:0.5px solid #b8b5ac;border-radius:6px;padding:5px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .12s}
+.copy-btn:hover{background:#f0ede6}
+.copy-btn.copied{color:#3B6D11;border-color:#639922}
+.tip{font-size:11px;color:#6b6b67;margin-top:9px;padding:7px 10px;background:#f9f8f5;border-radius:6px;line-height:1.5;border-left:2px solid #d8d5cc}
+.tip strong{font-weight:500;color:#1a1a18}
+.reset-btn{font-size:12px;color:#6b6b67;background:none;border:0.5px solid #d8d5cc;border-radius:6px;padding:5px 13px;cursor:pointer;margin-top:4px}
+.reset-btn:hover{background:#f0ede6}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="page-header">
+  <div class="page-title">sentinel.ai Day 5 — Cursor Prompts</div>
+  <div class="page-sub">Integration, Regulatory RAG &amp; Polish &nbsp;·&nbsp; 16 main + 4 fix-up prompts</div>
+  <div class="progress-wrap"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+  <div class="progress-label"><span>Day 5 progress</span><span id="prog-text">0 of 20 done</span></div>
+  <button class="reset-btn" onclick="resetAll()">Reset all</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ START OF DAY -->
+<div class="phase-label">Start of day — prep</div>
+
+<div class="card" id="c0">
+<div class="card-header" onclick="tog('c0')">
+<span class="badge" style="background:#e8e5dc;color:#444441">Prompt 0</span>
+<div style="flex:1"><div class="card-title">Start-of-day checks and install test dependencies</div><div class="card-sub">Verify Days 1–4 stack, install pytest, create empty skill and test files</div></div>
+<svg class="chevron open" id="chev-c0" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c0">
+<div class="prompt-label">Cursor prompt — paste into Cursor chat</div>
+<div class="prompt-box" id="p0">Before writing any Day 5 code, confirm the full stack from Days 1–4 is working.
+
+Check 1 — backend starts cleanly:
+  cd sentinel.ai/backend
+  uvicorn api.main:app --reload
+  Must reach "Application startup complete" and show:
+  [Scheduler] Monitoring loop started — runs every 6 hours
+
+Check 2 — all core endpoints respond without 500 errors:
+  curl http://localhost:8000/health
+  curl http://localhost:8000/actions
+  curl "http://localhost:8000/dashboard/summary?user_id=dev"
+
+Check 3 — Supabase has rows in all required tables:
+  documents, chunks, obligations, actions, agent_steps, memory
+  Open Supabase Table Editor and confirm each has at least one row.
+
+Check 4 — memory is writing correctly:
+  Open Supabase > memory table. Must have at least one row with
+  memory_type = "preference" and a non-null embedding column.
+
+If all four checks pass, install two new Python packages:
+  pip install pytest pytest-asyncio
+
+Then create these empty files now so Python treats all folders as packages
+and Cursor can auto-complete imports correctly:
+  touch sentinel.ai/backend/rag/regulatory.py
+  touch sentinel.ai/backend/skills/__init__.py
+  touch sentinel.ai/backend/skills/extract_obligations.py
+  touch sentinel.ai/backend/skills/score_risk.py
+  touch sentinel.ai/backend/skills/draft_letter.py
+  touch sentinel.ai/backend/skills/summarise_document.py
+  touch sentinel.ai/backend/skills/check_price_drift.py
+  touch sentinel.ai/backend/skills/generate_gdpr_sar.py
+  touch sentinel.ai/backend/tests/__init__.py
+  touch sentinel.ai/backend/tests/test_rag.py
+  touch sentinel.ai/backend/tests/test_memory.py
+  touch sentinel.ai/backend/tests/test_guardrails.py
+  touch sentinel.ai/backend/tests/conftest.py</div>
+<button class="copy-btn" onclick="cp('p0',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>Do not skip the four checks.</strong> Day 5 adds the regulatory corpus, memory integration, and skills library on top of Days 1–4. If any layer below is broken, errors will compound and be very hard to trace back to the root cause.</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ HOUR 1 -->
+<div class="phase-label">Hour 1 — regulatory knowledge base</div>
+
+<div class="card" id="c1a">
+<div class="card-header" onclick="tog('c1a')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1A</span>
+<div style="flex:1"><div class="card-title">Create the regulatory_chunks table and match_regulatory_chunks RPC in Supabase</div><div class="card-sub">New table + vector index + stored search function</div></div>
+<svg class="chevron open" id="chev-c1a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c1a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1a">I need to create a new table in Supabase to store regulatory knowledge separately
+from user documents. Open Supabase SQL Editor > New query and run this SQL:
+
+  create table regulatory_chunks (
+    id uuid primary key default gen_random_uuid(),
+    regulation_name text not null,
+    regulation_version text default '2025',
+    jurisdiction text default 'GB',
+    domain text,
+    section_ref text,
+    content text not null,
+    embedding vector(1536),
+    metadata jsonb default '{}',
+    created_at timestamptz default now()
+  );
+
+  create index on regulatory_chunks
+  using ivfflat (embedding vector_cosine_ops)
+  with (lists = 50);
+
+  create or replace function match_regulatory_chunks(
+    query_embedding vector(1536),
+    match_threshold float,
+    match_count int,
+    p_jurisdiction text default 'GB',
+    p_domain text default null
+  )
+  returns table (
+    id uuid, regulation_name text, section_ref text,
+    content text, metadata jsonb, similarity float, jurisdiction text
+  )
+  language sql stable
+  as $$
+    select id, regulation_name, section_ref, content, metadata,
+      1 - (embedding <=> query_embedding) as similarity, jurisdiction
+    from regulatory_chunks
+    where
+      (p_jurisdiction is null or jurisdiction = p_jurisdiction)
+      and (p_domain is null or domain = p_domain)
+      and embedding is not null
+      and 1 - (embedding <=> query_embedding) > match_threshold
+    order by embedding <=> query_embedding
+    limit match_count;
+  $$;
+
+After running, confirm the table and function appear in Supabase dashboard.</div>
+<button class="copy-btn" onclick="cp('p1a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c1b">
+<div class="card-header" onclick="tog('c1b')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1B</span>
+<div style="flex:1"><div class="card-title">Create backend/rag/regulatory.py — corpus + retrieval</div><div class="card-sub">REGULATORY_CORPUS constant, embed helper, seed function, retrieve function</div></div>
+<svg class="chevron open" id="chev-c1b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c1b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1b">Create the file sentinel.ai/backend/rag/regulatory.py for the sentinel.ai project.
+
+Imports:
+  import os, json
+  from voyageai import voyageai
+  from api.db import supabase
+  from dotenv import load_dotenv
+  load_dotenv()
+  voyageai = voyageai(api_key=os.getenv("voyageai_API_KEY"))
+
+Section 1 — REGULATORY_CORPUS constant:
+A Python list of dicts. Each dict has: regulation_name, jurisdiction="GB",
+domain, section_ref, content (2-3 sentence plain English summary).
+
+Create entries for these UK regulations:
+
+Consumer Contracts Regulations 2013 (domain: "subscription"):
+  - Section 28: Right to cancel — 14-day cancellation right for distance contracts
+  - Section 29: How the 14-day cancellation period is calculated from receipt
+  - Section 34: Reimbursement — trader must refund within 14 days of cancellation
+
+Consumer Rights Act 2015 (domain: "subscription"):
+  - Section 9: Goods must be of satisfactory quality fit for purpose
+  - Section 49: Services must be performed with reasonable care and skill
+  - Section 56: Services must be performed within a reasonable time if not agreed
+
+UK GDPR Articles 15-22 (domain: "gdpr"):
+  - Article 15: Right of access — individual can request copy of all personal data
+  - Article 17: Right to erasure — right to be forgotten in defined circumstances
+  - Article 20: Right to data portability — receive data in machine-readable format
+  - Article 21: Right to object to processing — including direct marketing
+
+Tenancy Deposit Scheme (domain: "housing"):
+  - Requirement to protect deposits in approved scheme within 30 days of receipt
+  - Prescribed information must be provided to tenant within 30 days
+  - Failure to protect: landlord liable to pay tenant 1–3 times the deposit amount
+
+Section 2 — def embed_text(text: str) -> list[float]:
+  Call voyageai.embeddings.create(model="text-embedding-3-small", input=[text])
+  Return response.data[0].embedding
+
+Section 3 — async def seed_regulatory_corpus() -> int:
+  Loop over REGULATORY_CORPUS. For each entry:
+    embedding = embed_text(entry["content"])
+    Insert into supabase.table("regulatory_chunks") with all fields + embedding.
+    Print: f"Seeding: {entry['regulation_name']} — {entry['section_ref']}"
+  Return total count inserted. Wrap in try/except — on error print and return 0.
+
+Section 4 — def retrieve_regulatory_context(query: str, jurisdiction: str = "GB",
+domain: str = None) -> list:
+  embedding = embed_text(query)
+  Call supabase.rpc("match_regulatory_chunks", {
+      "query_embedding": embedding,
+      "match_threshold": 0.4,
+      "match_count": 5,
+      "p_jurisdiction": jurisdiction,
+      "p_domain": domain
+  }).execute()
+  Return result.data or [].</div>
+<button class="copy-btn" onclick="cp('p1b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>Threshold is set to 0.4</strong> (lower than the user document RAG at 0.7) because regulatory text is short and terse, which tends to produce lower cosine similarity scores than longer prose.</div>
+</div>
+</div>
+
+<div class="card" id="c1c">
+<div class="card-header" onclick="tog('c1c')">
+<span class="badge" style="background:#CECBF6;color:#3C3489">Prompt 1C</span>
+<div style="flex:1"><div class="card-title">Add POST /regulatory/seed endpoint and seed the corpus</div><div class="card-sub">Admin endpoint + curl test + Supabase verification</div></div>
+<svg class="chevron open" id="chev-c1c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c1c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p1c">Edit sentinel.ai/backend/api/main.py to add a regulatory seeding endpoint.
+
+Add this import at the top:
+  from rag.regulatory import seed_regulatory_corpus
+
+Add this endpoint below the existing /monitor/run endpoint:
+
+  @app.post("/regulatory/seed")
+  async def seed_regulatory(user_id: str = "dev"):
+      """Seeds the regulatory knowledge base. Safe to re-run."""
+      count = await seed_regulatory_corpus()
+      return {"seeded": count, "message": f"Inserted {count} regulatory chunks"}
+
+After saving, restart the backend and seed the corpus:
+  curl -X POST "http://localhost:8000/regulatory/seed"
+
+Expected response: {"seeded": 13, "message": "Inserted 13 regulatory chunks"}
+(count may vary depending on how many entries are in REGULATORY_CORPUS)
+
+Verify in Supabase Table Editor > regulatory_chunks:
+  - At least 10 rows present
+  - embedding column is non-null for every row
+
+Then test retrieval from a Python shell:
+  python
+  >>> from rag.regulatory import retrieve_regulatory_context
+  >>> results = retrieve_regulatory_context("cancellation rights subscription", "GB", "subscription")
+  >>> for r in results:
+  ...     print(r["regulation_name"], "-", r["section_ref"])
+  ...     print(r["content"][:100])
+  ...     print("---")
+
+Expected: 2–4 results from Consumer Contracts Regulations 2013.</div>
+<button class="copy-btn" onclick="cp('p1c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ HOUR 2 -->
+<div class="phase-label">Hour 2 — memory integration into orchestrator</div>
+
+<div class="card" id="c2a">
+<div class="card-header" onclick="tog('c2a')">
+<span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 2A</span>
+<div style="flex:1"><div class="card-title">Update orchestrator.py to query memory and regulatory RAG at task start</div><div class="card-sub">Enrich initial context with vendor history, preferences, and regulations before the loop</div></div>
+<svg class="chevron open" id="chev-c2a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c2a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p2a">Edit sentinel.ai/backend/agents/orchestrator.py.
+
+The orchestrator currently builds its initial context only from the trigger dict.
+Update it to also query long-term memory and the regulatory corpus before starting
+the agentic loop, so the system knows the user's history with a vendor before it
+begins working.
+
+Add these imports at the top of the file:
+  from memory.long_term import LongTermMemory
+  from rag.regulatory import retrieve_regulatory_context
+  memory = LongTermMemory()
+
+At the start of the orchestrate() function, before building the messages list,
+add these three context lookups:
+  vendor = trigger.get("vendor_name", "")
+  domain = trigger.get("domain", "subscription")
+
+  vendor_history = await memory.recall_vendor_history("dev", vendor) if vendor else []
+  user_preferences = await memory.recall_relevant_preferences("dev", domain)
+  regulatory_context = retrieve_regulatory_context(
+      f"{domain} {trigger.get('document_type', 'contract')}",
+      jurisdiction="GB",
+      domain=domain
+  )
+
+Add a print statement after these lookups:
+  print(f"[Orchestrator] Context enriched: {len(vendor_history)} vendor memories, "
+        f"{len(user_preferences)} preferences, {len(regulatory_context)} regulatory refs")
+
+Update the initial user message to include this enriched context.
+Replace the current initial user message with one that includes:
+  - Original trigger fields (document_id, vendor_name, document_type, domain)
+  - Vendor history section: if non-empty list the past observations; if empty
+    note "No prior history with this vendor."
+  - User preferences section: if non-empty list the top 3 decision/outcome pairs;
+    if empty note "No recorded preferences for this domain."
+  - Regulatory context section: format as numbered list
+    "1. {regulation_name} — {section_ref}: {content[:150]}"
+
+Do not change the agentic loop itself — only the context-building before it.</div>
+<button class="copy-btn" onclick="cp('p2a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>This is the step that makes the system feel genuinely intelligent</strong> — it knows your history with a vendor before it starts working. After this change, run /analyse on a document you have analysed before and check the terminal for the enriched context print.</div>
+</div>
+</div>
+
+<div class="card" id="c2b">
+<div class="card-header" onclick="tog('c2b')">
+<span class="badge" style="background:#F5C4B3;color:#712B13">Prompt 2B</span>
+<div style="flex:1"><div class="card-title">Update Research Agent to query regulatory RAG before web search</div><div class="card-sub">Corpus-first pattern — fall through to web search only when coverage is insufficient</div></div>
+<svg class="chevron open" id="chev-c2b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c2b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p2b">Edit the research_agent() function in sentinel.ai/backend/agents/sub_agents.py.
+
+Currently the Research Agent goes straight to web search. Update it to query the
+regulatory RAG corpus first, then only fall through to web search if the corpus
+does not return sufficient results.
+
+Add this import at the top of the function body:
+  from rag.regulatory import retrieve_regulatory_context
+
+Updated logic (add at the very start of the function, before the existing prompt):
+
+Step 1 — query the regulatory corpus first:
+  regulatory_results = retrieve_regulatory_context(query=query, jurisdiction=jurisdiction)
+
+Step 2 — if 2 or more results returned, return early without calling web search:
+  if len(regulatory_results) >= 2:
+      return {
+          "regulations": [
+              {"name": r["regulation_name"], "section": r["section_ref"],
+               "relevance": r["content"][:200]}
+              for r in regulatory_results
+          ],
+          "sources": [f"{r['regulation_name']} {r['section_ref']}" for r in regulatory_results],
+          "summary": (f"Found {len(regulatory_results)} relevant regulations in the corpus. "
+                      + " ".join([r["content"][:100] for r in regulatory_results[:2]])),
+          "source": "regulatory_rag"
+      }
+
+Step 3 — if fewer than 2 corpus results, fall through to the existing web search
+logic. Add this note to the web search prompt:
+  "The local regulatory corpus did not have sufficient coverage for this query."
+
+Step 4 — on the final dict returned from web search, add: "source": "web_search"
+
+Do not change anything else in the function. The early return is the only
+structural change.</div>
+<button class="copy-btn" onclick="cp('p2b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ HOUR 3 -->
+<div class="phase-label">Hour 3 — skills library</div>
+
+<div class="card" id="c3a">
+<div class="card-header" onclick="tog('c3a')">
+<span class="badge" style="background:#9FE1CB;color:#085041">Prompt 3A</span>
+<div style="flex:1"><div class="card-title">Create the six skill files in backend/skills/</div><div class="card-sub">extract_obligations, score_risk, draft_letter, summarise_document, check_price_drift, generate_gdpr_sar</div></div>
+<svg class="chevron open" id="chev-c3a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c3a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p3a">Create six skill files in sentinel.ai/backend/skills/. Each skill is a standalone async
+function with a typed interface — a reusable prompt+logic module. Each file must:
+import os and anthropic, load the Anthropic client from the environment, wrap the
+Claude call in try/except, and return a safe fallback on failure. Skills are
+independent and must not import from each other.
+
+FILE 1 — backend/skills/extract_obligations.py:
+  async def extract_obligations(text: str, doc_type: str) -> list:
+    Prompt claude-sonnet-4-20250514 (max_tokens=800) to extract all dated
+    obligations. Return list of:
+    [{obligation_type, due_date, description, financial_amount, currency}]
+    Apply markdown-stripping parse logic. Return [] on failure.
+    Update backend/rag/ingestion.py to import and call this skill instead of
+    its current inline obligation extraction.
+
+FILE 2 — backend/skills/score_risk.py:
+  async def score_clause_risk(clause: str, jurisdiction: str, doc_type: str) -> dict:
+    Prompt Claude to score one clause 0–10.
+    Return: {score: int, severity: str, explanation: str, recommended_action: str}
+    Return {score:5, severity:"medium", explanation:"Parse failed", recommended_action:""} on failure.
+
+FILE 3 — backend/skills/draft_letter.py:
+  async def draft_letter(action_type: str, context: dict, user_profile: dict = {}) -> dict:
+    Same prompt logic as negotiation_drafter in sub_agents.py but with a cleaner
+    interface. Return: {subject_line: str, letter: str, tone: str, placeholders_to_fill: list}
+    Update sub_agents.py to import and call this skill from negotiation_drafter()
+    instead of duplicating the prompt.
+
+FILE 4 — backend/skills/summarise_document.py:
+  async def summarise_document(text: str, max_length: int = 200, output_format: str = "plain") -> str:
+    Prompt Claude to summarise in max_length words.
+    output_format "plain" → string, "bullets" → bulleted string.
+    Return summary string. Return "" on failure.
+
+FILE 5 — backend/skills/check_price_drift.py:
+  async def check_price_drift(vendor: str, current_amount: float, transaction_history: list) -> dict:
+    transaction_history: [{date, amount, description}]
+    Prompt Claude to detect price increase vs history.
+    Return: {drift_detected: bool, drift_pct: float, explanation: str, recommended_action: str}
+    If transaction_history is empty return:
+    {drift_detected:False, drift_pct:0.0, explanation:"No history available",
+     recommended_action:"Monitor future bills"}
+
+FILE 6 — backend/skills/generate_gdpr_sar.py:
+  async def generate_gdpr_sar(company: str, user_details: dict) -> dict:
+    user_details must contain: name, address, email.
+    Draft a UK GDPR Article 15 Subject Access Request letter.
+    Must cite Article 15 by name and state the 30-day response deadline.
+    Return: {subject_line: str, letter: str, deadline_days: int, placeholders_to_fill: list}
+    Return safe fallback dict on failure.</div>
+<button class="copy-btn" onclick="cp('p3a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>After Cursor generates all six files,</strong> check that ingestion.py and sub_agents.py have been updated to import from the new skills rather than duplicating the prompt logic. If Cursor missed those updates, ask it to "Update ingestion.py to import extract_obligations from skills.extract_obligations and call it instead of the inline version."</div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ HOURS 4–5 -->
+<div class="phase-label">Hours 4–5 — end-to-end testing</div>
+
+<div class="card" id="c4a">
+<div class="card-header" onclick="tog('c4a')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4A</span>
+<div style="flex:1"><div class="card-title">Create conftest.py + write tests/test_rag.py</div><div class="card-sub">pytest setup + 4 RAG tests covering semantic search, keyword fallback, regulatory retrieval, embedding dimensions</div></div>
+<svg class="chevron open" id="chev-c4a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c4a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4a">Create two files for the RAG test suite.
+
+FILE 1 — sentinel.ai/backend/tests/conftest.py:
+  import sys, os
+  sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+FILE 2 — create sentinel.ai/backend/pytest.ini at sentinel.ai/backend/pytest.ini:
+  [pytest]
+  asyncio_mode = auto
+
+FILE 3 — sentinel.ai/backend/tests/test_rag.py:
+  import pytest
+  from rag.retrieval import retrieve, keyword_search, embed
+  from rag.regulatory import retrieve_regulatory_context
+
+  Test 1 — test_semantic_search_returns_results:
+    result = await retrieve("when does this contract expire?")
+    assert isinstance(result, list)
+    if len(result) == 0:
+        pytest.skip("Skip: no documents ingested yet — run /ingest first")
+    assert all("id" in r and "content" in r and "document_id" in r for r in result)
+
+  Test 2 — test_keyword_fallback:
+    result = keyword_search("cancellation")
+    assert isinstance(result, list)
+    assert all("content" in r for r in result)
+
+  Test 3 — test_regulatory_rag_returns_results:
+    result = retrieve_regulatory_context("cancellation rights", "GB", "subscription")
+    assert isinstance(result, list)
+    if len(result) == 0:
+        pytest.fail("Regulatory corpus is empty — run POST /regulatory/seed first")
+    assert all("regulation_name" in r and "content" in r and "section_ref" in r for r in result)
+
+  Test 4 — test_embed_returns_correct_dimensions:
+    result = embed("test document query")
+    assert isinstance(result, list)
+    assert len(result) == 1536
+    assert all(isinstance(v, float) for v in result)
+
+Run the tests and show me the output:
+  cd sentinel.ai/backend
+  python -m pytest tests/test_rag.py -v</div>
+<button class="copy-btn" onclick="cp('p4a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4b">
+<div class="card-header" onclick="tog('c4b')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4B</span>
+<div style="flex:1"><div class="card-title">Write tests/test_memory.py</div><div class="card-sub">4 memory tests: store/recall vendor, store/recall preference, store outcome, graceful empty recall</div></div>
+<svg class="chevron open" id="chev-c4b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c4b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4b">Create sentinel.ai/backend/tests/test_memory.py.
+
+  import pytest
+  from memory.long_term import LongTermMemory
+
+  TEST_USER = "test_user_d5"
+
+  @pytest.fixture(scope="module", autouse=True)
+  async def cleanup():
+      yield
+      from api.db import supabase
+      supabase.table("memory").delete().eq("user_id", TEST_USER).execute()
+
+  Test 1 — test_store_and_recall_vendor:
+    mem = LongTermMemory()
+    row_id = await mem.store_vendor_observation(TEST_USER, "TestCo",
+        {"event": "test", "detail": "Day 5 test", "date": "2025-01-01"})
+    assert isinstance(row_id, str) and len(row_id) > 0
+    history = await mem.recall_vendor_history(TEST_USER, "TestCo")
+    assert isinstance(history, list) and len(history) > 0
+    assert history[0]["value"]["event"] == "test"
+
+  Test 2 — test_store_and_recall_preference:
+    mem = LongTermMemory()
+    row_id = await mem.store_user_preference(TEST_USER,
+        "gym subscription cancel", "rejected", "user preferred negotiation")
+    assert isinstance(row_id, str) and len(row_id) > 0
+    prefs = await mem.recall_relevant_preferences(TEST_USER, "gym subscription")
+    assert isinstance(prefs, list)
+
+  Test 3 — test_store_outcome:
+    mem = LongTermMemory()
+    row_id = await mem.store_outcome(TEST_USER, "test-action-001", "letter_sent", 0.0)
+    assert isinstance(row_id, str) and len(row_id) > 0
+
+  Test 4 — test_graceful_empty_recall:
+    mem = LongTermMemory()
+    result = await mem.recall_vendor_history(TEST_USER, "NonExistentVendorXYZ999")
+    assert isinstance(result, list)
+
+Run and show output:
+  python -m pytest tests/test_memory.py -v</div>
+<button class="copy-btn" onclick="cp('p4b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4c">
+<div class="card-header" onclick="tog('c4c')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4C</span>
+<div style="flex:1"><div class="card-title">Write tests/test_guardrails.py</div><div class="card-sub">5 guardrail tests: caveat injection, PII redaction, scope escalation, clean output, empty content</div></div>
+<svg class="chevron open" id="chev-c4c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c4c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4c">Create sentinel.ai/backend/tests/test_guardrails.py.
+
+  from agents.guardrails import apply_guardrails
+
+  Test 1 — test_legal_caveat_injected_for_letter_draft:
+    result = apply_guardrails({"content": "This is a test letter.", "warnings": []}, "letter_draft")
+    assert "AI-generated" in result["content"] or "professional" in result["content"]
+
+  Test 2 — test_pii_redacted:
+    result = apply_guardrails(
+        {"content": "NI number AB123456C and account 12345678 noted.", "warnings": []},
+        "letter_draft")
+    assert "AB123456C" not in result["content"]
+    assert len(result["warnings"]) > 0
+
+  Test 3 — test_scope_escalation_flagged:
+    result = apply_guardrails(
+        {"content": "You should take legal action against them immediately.", "warnings": []},
+        "risk_assessment")
+    assert result.get("escalate") is True
+    assert "escalation_reason" in result
+
+  Test 4 — test_no_extra_warnings_for_clean_output:
+    result = apply_guardrails(
+        {"content": "The contract expires on 1 January 2026.", "warnings": []},
+        "letter_draft")
+    assert isinstance(result["warnings"], list)
+    assert not any("redacted" in w.lower() for w in result["warnings"])
+
+  Test 5 — test_empty_content_handled_gracefully:
+    result = apply_guardrails({"content": "", "warnings": []}, "letter_draft")
+    assert "content" in result
+    assert isinstance(result["warnings"], list)
+
+Run and show output:
+  python -m pytest tests/test_guardrails.py -v</div>
+<button class="copy-btn" onclick="cp('p4c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c4d">
+<div class="card-header" onclick="tog('c4d')">
+<span class="badge" style="background:#B5D4F4;color:#0C447C">Prompt 4D</span>
+<div style="flex:1"><div class="card-title">Fix the highest-priority bugs found during testing</div><div class="card-sub">Prioritised bug-fix guide for the three test suites</div></div>
+<svg class="chevron open" id="chev-c4d" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c4d">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p4d">Run all three test suites and fix bugs in this priority order.
+
+First run:
+  cd sentinel.ai/backend
+  python -m pytest tests/ -v --tb=short
+
+Priority 1 — test_rag.py failures:
+  If test_semantic_search_returns_results is skipped:
+    Run: curl -X POST "http://localhost:8000/ingest" -F "file=@any_pdf.pdf"
+    Then re-run the test.
+  If test_regulatory_rag_returns_results fails:
+    Run: curl -X POST "http://localhost:8000/regulatory/seed"
+    Then re-run.
+  If test_embed_returns_correct_dimensions fails with len != 1536:
+    The embed function is using a different model. In rag/retrieval.py confirm
+    model="text-embedding-3-small" (not ada-002 which returns 1536 or large which
+    returns 3072). text-embedding-3-small returns 1536 by default.
+
+Priority 2 — test_memory.py failures:
+  If test_store_and_recall_vendor fails with empty history:
+    Check Supabase memory table for the test row. If the row exists but embedding
+    is null, the _embed() call is failing. Verify voyageai_API_KEY in backend/.env.
+  If the cleanup fixture fails:
+    The delete query may need .neq("id", "00000000-0000-0000-0000-000000000000")
+    as Supabase requires a filter on bulk deletes.
+
+Priority 3 — test_guardrails.py failures:
+  If test_pii_redacted fails (PII not being removed):
+    Check the NI number regex in guardrails.py.
+    Correct pattern: r'[A-Z]{2}\d{6}[A-Z]' — verify this exact pattern is present.
+  If test_scope_escalation_flagged fails:
+    Ensure "take legal action" is in the trigger phrase list in check_scope_escalation().
+
+After all fixes, run the full suite again:
+  python -m pytest tests/ -v --tb=short
+  Expected: all tests pass (PASSED) or deliberately skipped (SKIPPED).</div>
+<button class="copy-btn" onclick="cp('p4d',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ HOURS 6–7 -->
+<div class="phase-label">Hours 6–7 — demo flow and documentation</div>
+
+<div class="card" id="c5a">
+<div class="card-header" onclick="tog('c5a')">
+<span class="badge" style="background:#C0DD97;color:#27500A">Prompt 5A</span>
+<div style="flex:1"><div class="card-title">Add regulatory coverage line to Document Vault cards</div><div class="card-sub">Display which UK regulations cover each document based on its domain</div></div>
+<svg class="chevron open" id="chev-c5a" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c5a">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p5a">Edit sentinel.ai/frontend/src/pages/DocumentVault.jsx.
+
+Add this constant at the top of the component (outside the function):
+  const DOMAIN_REGULATIONS = {
+    subscription: "Consumer Contracts Regs 2013 · Consumer Rights Act 2015",
+    employment: "Employment Rights Act 1996",
+    tax: "Finance Act 2025",
+    gdpr: "UK GDPR Articles 15–22",
+    housing: "Tenancy Deposit Scheme · Landlord & Tenant Act 1985",
+  }
+
+For each document card, add one new line below the existing summary text:
+  If doc.metadata?.domain exists and DOMAIN_REGULATIONS has a matching key:
+    Render: "Covered by: {DOMAIN_REGULATIONS[doc.metadata.domain]}"
+    Style: text-xs text-blue-600 mt-1
+
+Do not change any other part of the component. This is a display-only change.</div>
+<button class="copy-btn" onclick="cp('p5a',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c5b">
+<div class="card-header" onclick="tog('c5b')">
+<span class="badge" style="background:#C0DD97;color:#27500A">Prompt 5B</span>
+<div style="flex:1"><div class="card-title">Add cycling status messages to the upload area</div><div class="card-sub">Replace static "Processing..." with a sequence of status strings cycling every 2 seconds</div></div>
+<svg class="chevron open" id="chev-c5b" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c5b">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p5b">Edit sentinel.ai/frontend/src/pages/DocumentVault.jsx.
+
+Add a statusIndex state variable (number, initially 0).
+
+Add this constant inside the component function:
+  const STATUS_MESSAGES = [
+    "Extracting text...",
+    "Classifying document...",
+    "Creating embeddings...",
+    "Extracting obligations...",
+    "Finalising..."
+  ]
+
+Add a useEffect that manages the cycling interval:
+  useEffect(() => {
+    if (!uploading) { setStatusIndex(0); return; }
+    const interval = setInterval(() => {
+      setStatusIndex(i => Math.min(i + 1, STATUS_MESSAGES.length - 1));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [uploading]);
+
+In the upload label, replace the static "Processing..." text with:
+  {uploading ? STATUS_MESSAGES[statusIndex] : "Drop a PDF here or click to upload"}
+
+This is a UX-only change. No API calls or backend logic changes.</div>
+<button class="copy-btn" onclick="cp('p5b',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c5c">
+<div class="card-header" onclick="tog('c5c')">
+<span class="badge" style="background:#C0DD97;color:#27500A">Prompt 5C</span>
+<div style="flex:1"><div class="card-title">Add chat history persistence and clear button</div><div class="card-sub">Backend session store + frontend history load on mount + clear conversation</div></div>
+<svg class="chevron open" id="chev-c5c" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c5c">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p5c">Two changes — one backend, one frontend.
+
+BACKEND — edit sentinel.ai/backend/api/main.py:
+
+Add a simple in-memory conversation store above the endpoints:
+  conversation_store: dict = {}
+
+Add two new endpoints:
+
+  @app.get("/chat/history/{session_id}")
+  def get_chat_history(session_id: str):
+      return {"messages": conversation_store.get(session_id, [])}
+
+  @app.delete("/chat/history/{session_id}")
+  def clear_chat_history(session_id: str):
+      conversation_store.pop(session_id, None)
+      return {"cleared": True}
+
+Update the existing /chat endpoint to accept an optional session_id (default
+"default") and append each exchange to conversation_store[session_id]:
+  After getting the response, append to conversation_store[session_id]:
+    conversation_store.setdefault(session_id, [])
+    conversation_store[session_id].append({"role": "user", "text": req.message})
+    conversation_store[session_id].append({"role": "assistant", "text": result["answer"]})
+
+FRONTEND — edit sentinel.ai/frontend/src/pages/Chat.jsx:
+
+Add a SESSION_ID constant at the top of the component:
+  const SESSION_ID = "session_" + Math.floor(Date.now() / 1000)
+
+On mount (useEffect with []), call GET /chat/history/{SESSION_ID} and load any
+existing messages into the messages state.
+
+Add a "Clear conversation" button in the heading row (right-aligned):
+  Styles: text-xs text-gray-400 hover:text-red-500 cursor-pointer
+  On click: call DELETE /chat/history/{SESSION_ID}, then setMessages([]).
+
+Pass session_id: SESSION_ID in the body of every POST /chat call.</div>
+<button class="copy-btn" onclick="cp('p5c',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+<div class="tip"><strong>The conversation store is in-memory</strong> — it resets when the backend restarts. This is intentional for a POC. A production version would store sessions in Supabase.</div>
+</div>
+</div>
+
+<div class="card" id="c5d">
+<div class="card-header" onclick="tog('c5d')">
+<span class="badge" style="background:#C0DD97;color:#27500A">Prompt 5D</span>
+<div style="flex:1"><div class="card-title">Full end-to-end demo flow checkpoint</div><div class="card-sub">8-step demo + memory verification + final test suite run</div></div>
+<svg class="chevron open" id="chev-c5d" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c5d">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p5d">Walk me through the complete Day 5 end-to-end demo. Both servers must be running.
+
+Step 1 — Drive sync with two real documents:
+  Upload two PDFs to Google Drive:
+    a. A broadband or phone contract
+    b. A gym or subscription agreement
+  Wait 1–2 minutes. Click "Sync Drive" in the Dashboard or run:
+    curl -X POST "http://localhost:8000/sync/drive?user_id=dev"
+  Expected: both documents appear in Document Vault. Dashboard domain tiles update.
+  Document cards show a "Covered by:" regulatory line.
+
+Step 2 — Confirm memory context enrichment:
+  Run /analyse on one of the new documents:
+    curl -X POST "http://localhost:8000/analyse?document_id=YOUR_DOC_UUID"
+  Check the backend terminal for:
+    [Orchestrator] Context enriched: N vendor memories, N preferences, N regulatory refs
+  Regulatory refs must be > 0 if the corpus was seeded correctly.
+
+Step 3 — Check Research Agent uses regulatory RAG:
+  In the backend terminal, find the [Loop] Calling tool: invoke_research_agent line.
+  The response from the research agent should include "source": "regulatory_rag"
+  (printed in the step log or visible in agent_steps table in Supabase).
+
+Step 4 — Review Action Queue:
+  Open the Action Queue tab. Find the highest-severity pending action.
+  Confirm it shows severity badge, reasoning chain, and draft letter.
+  Confirm guardrail warnings appear if any PII or scope escalation was detected.
+
+Step 5 — Approve and send a real letter:
+  Click Approve & send. Confirm the modal shows the letter and the real email warning.
+  Click Confirm & send. Check inbox for the email.
+  Confirm the card updates to "Sent" status.
+
+Step 6 — Chat with cited answers:
+  Open the Chat tab.
+  Ask: "What is my total subscription exposure this year?"
+  Ask: "Which of my contracts has the shortest cancellation window?"
+  Both must return cited answers with at least one [N] reference.
+
+Step 7 — View Activity Log:
+  Open Activity Log. Confirm it shows agent steps from today's runs including
+  the regulatory_rag source appearing in research agent steps.
+
+Step 8 — Run the full test suite:
+  cd sentinel.ai/backend
+  python -m pytest tests/ -v --tb=short
+  All tests must pass or be intentionally skipped.
+
+Day 5 is complete when Steps 5, 6, and 8 all succeed without errors.</div>
+<button class="copy-btn" onclick="cp('p5d',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="c5e">
+<div class="card-header" onclick="tog('c5e')">
+<span class="badge" style="background:#C0DD97;color:#27500A">Prompt 5E</span>
+<div style="flex:1"><div class="card-title">Write sentinel.ai/ARCHITECTURE.md — learning artefact</div><div class="card-sub">One-page document covering all 12 layers, data flow, tech choices, and honest gap analysis</div></div>
+<svg class="chevron open" id="chev-c5e" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-c5e">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="p5e">Create the file sentinel.ai/ARCHITECTURE.md.
+
+This is the learning artefact — a one-page document proving you understand what
+you built. Keep it under 600 words total. Clarity over completeness.
+
+Structure:
+
+Section 1 — What it does (2-3 sentences):
+  Describe sentinel.ai in plain English. What problem does it solve? Who is it for?
+
+Section 2 — Architecture layers (1-2 sentences each):
+  1. Ingestion pipeline — PDF → text extraction → classify → chunk → embed → store
+  2. Personal RAG store — pgvector semantic search + keyword fallback + rerank
+  3. Regulatory RAG corpus — separate table, queried before web search
+  4. Orchestrator — Claude + 5 tool definitions + agentic loop (max 10 iterations)
+  5. Sub-agents — Contract Analyst, Research Agent, Risk Scorer, Negotiation Drafter
+  6. Skills library — 6 reusable prompt modules with typed interfaces
+  7. Guardrail layer — citation check, PII redaction, legal caveat, scope escalation
+  8. HITL system — action queue, double-confirm on send, memory write on decision
+  9. Long-term memory — vendor history, user preferences, outcomes via pgvector
+  10. Monitoring loop — Drive sync, deadline alerts, stale escalation, APScheduler
+  11. Google Drive MCP — list and fetch files via MCP server HTTP calls
+  12. Frontend — 5 pages: Dashboard, Document Vault, Action Queue, Chat, Activity Log
+
+Section 3 — Data flow (one sentence per step):
+  Document uploaded → ingested and embedded → orchestrator triggered → memory and
+  regulatory context loaded → sub-agents analyse → guardrails applied → action item
+  created → user reviews in queue → approves with double-confirm → email sent via
+  Resend → memory updated with decision.
+
+Section 4 — Technology choices (markdown table):
+  Component | Technology | Reason
+  LLM | Claude Sonnet 4 | Best long document reasoning; already in this ecosystem
+  Vector store | Supabase pgvector | One service for relational + vector storage
+  Backend | Python FastAPI | Async support, clean for agent orchestration
+  Frontend | React + Tailwind | Fast enough to build all 5 surfaces
+  Email | Resend API | Simple, free tier generous
+  Embeddings | voyageai text-embedding-3-small | No Anthropic embedding endpoint exists
+  Scheduling | APScheduler | Async-compatible, simple interval jobs
+  Document parsing | PyMuPDF | Robust PDF text extraction
+  MCP | Google Drive MCP | Already connected, no connector build needed
+
+Section 5 — Honest gap analysis (3-4 specific gaps):
+  - No RAG evaluation harness — retrieval quality cannot be measured
+  - No structured observability — agent traces not logged with latency/tokens
+  - No streaming agent output — UI waits for full run to complete
+  - No parallel sub-agent fan-out — all sub-agents run sequentially</div>
+<button class="copy-btn" onclick="cp('p5e',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ FIX-UPS -->
+<div class="phase-label">Fix-up prompts — use only if something breaks</div>
+
+<div class="card" id="fix1">
+<div class="card-header" onclick="tog('fix1')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up A</span>
+<div style="flex:1"><div class="card-title">Regulatory RAG returns empty after seeding</div><div class="card-sub">Null embeddings, threshold too high, or RPC query mismatch</div></div>
+<svg class="chevron open" id="chev-fix1" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-fix1">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix1">retrieve_regulatory_context() returns an empty list even though regulatory_chunks
+has rows in Supabase.
+
+Step 1 — confirm embeddings are stored:
+  In Supabase > regulatory_chunks, check the embedding column.
+  If null for any row, seeding failed silently. Add a print to seed_regulatory_corpus():
+    print(f"Embedding {entry['section_ref']}: length={len(embedding)}")
+  Re-run POST /regulatory/seed.
+
+Step 2 — test the RPC directly in Supabase SQL Editor:
+  select count(*) from regulatory_chunks where embedding is not null;
+  If count is 0, no embeddings stored. Re-seed after fixing the embedding call.
+
+Step 3 — lower the similarity threshold:
+  In retrieve_regulatory_context() in regulatory.py, change match_threshold
+  from 0.4 to 0.2 temporarily and test. If results appear, keep 0.3 as a
+  permanent threshold — short regulatory text produces lower similarity scores.
+
+Step 4 — test with the most specific possible query:
+  result = retrieve_regulatory_context(
+      "14 day right to cancel distance contract cooling off period", "GB")
+  If this returns results but general queries don't, add more keyword synonyms
+  to the content fields in REGULATORY_CORPUS (e.g. "cooling off period",
+  "right to cancel", "distance selling") to improve recall.</div>
+<button class="copy-btn" onclick="cp('pfix1',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix2">
+<div class="card-header" onclick="tog('fix2')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up B</span>
+<div style="flex:1"><div class="card-title">Memory context not appearing in orchestrator</div><div class="card-sub">user_id mismatch, vendor key format, or similarity threshold too high</div></div>
+<svg class="chevron open" id="chev-fix2" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-fix2">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix2">The [Orchestrator] Context enriched print shows "0 vendor memories, 0 preferences"
+even though the Supabase memory table has rows.
+
+Step 1 — check user_id match:
+  orchestrate() calls memory with user_id="dev". Open Supabase > memory table
+  and check the user_id column. If it is not "dev", update the user_id passed
+  to memory calls in orchestrator.py to match what is in the table.
+
+Step 2 — check vendor key format:
+  recall_vendor_history() matches on key = vendor.lower().strip().
+  In Supabase, check the key column for vendor memory rows.
+  Print both values to compare:
+    print(f"Looking for: '{vendor.lower().strip()}'")
+    from api.db import supabase
+    rows = supabase.table("memory").select("key").eq("memory_type","vendor").execute()
+    print(f"Keys in table: {[r['key'] for r in rows.data]}")
+
+Step 3 — lower the preference recall threshold:
+  In long_term.py, recall_relevant_preferences() uses match_threshold=0.65.
+  For short preference texts this may be too high. Lower to 0.5 temporarily.
+  If preferences appear at 0.5, set 0.55 as the permanent threshold.
+
+Step 4 — test in isolation:
+  python
+  >>> import asyncio
+  >>> from memory.long_term import LongTermMemory
+  >>> mem = LongTermMemory()
+  >>> asyncio.run(mem.recall_vendor_history("dev", "ExactVendorNameFromSupabase"))</div>
+<button class="copy-btn" onclick="cp('pfix2',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix3">
+<div class="card-header" onclick="tog('fix3')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up C</span>
+<div style="flex:1"><div class="card-title">pytest fails with ImportError or ModuleNotFoundError</div><div class="card-sub">Wrong working directory, missing conftest.py, or asyncio_mode not set</div></div>
+<svg class="chevron open" id="chev-fix3" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-fix3">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix3">Running pytest fails with ImportError or ModuleNotFoundError when importing
+from rag.retrieval, memory.long_term, or agents.guardrails.
+
+Step 1 — confirm the run command uses python -m pytest from the right directory:
+  cd sentinel.ai/backend
+  python -m pytest tests/ -v
+  NOT: pytest tests/ from the project root.
+
+Step 2 — confirm conftest.py exists and has the sys.path fix:
+  File: sentinel.ai/backend/tests/conftest.py
+  Contents:
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+  Without this, Python cannot resolve module paths starting with "rag.", "memory."
+  or "agents." from inside the tests/ subfolder.
+
+Step 3 — confirm pytest.ini exists with asyncio_mode:
+  File: sentinel.ai/backend/pytest.ini
+  Contents:
+    [pytest]
+    asyncio_mode = auto
+  Without asyncio_mode = auto, async test functions return coroutine objects
+  instead of running, and appear to pass without actually testing anything.
+
+Step 4 — confirm the venv is active:
+  Terminal prompt must show (venv). If not:
+    source venv/bin/activate  (Mac/Linux)
+    venv\Scripts\activate     (Windows)
+  Then re-run pytest.</div>
+<button class="copy-btn" onclick="cp('pfix3',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+<div class="card" id="fix4">
+<div class="card-header" onclick="tog('fix4')">
+<span class="badge" style="background:#F7C1C1;color:#791F1F">Fix-up D</span>
+<div style="flex:1"><div class="card-title">Skills library Claude calls return empty fallbacks</div><div class="card-sub">Markdown-wrapped JSON, wrong return type, or missing parse logic</div></div>
+<svg class="chevron open" id="chev-fix4" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+<div class="card-body open" id="body-fix4">
+<div class="prompt-label">Cursor prompt</div>
+<div class="prompt-box" id="pfix4">One or more skill functions in backend/skills/ are returning empty fallback
+values instead of real results.
+
+Step 1 — identify the failing skill by testing in isolation:
+  python
+  >>> import asyncio
+  >>> from skills.extract_obligations import extract_obligations
+  >>> result = asyncio.run(extract_obligations(
+  ...     "The contract renews on 1 January 2027. Monthly fee: £29.99.",
+  ...     "subscription"))
+  >>> print(result)
+  If result is [] (the fallback), Claude is returning markdown-wrapped JSON.
+
+Step 2 — apply the standard parse fix to every failing skill:
+  In the parse section of each skill, before json.loads():
+    text = response.content[0].text.strip()
+    text = text.replace("```json", "").replace("```", "").strip()
+    if text.startswith("["):
+        start, end = text.find("["), text.rfind("]") + 1
+    else:
+        start, end = text.find("{"), text.rfind("}") + 1
+    if start >= 0 and end > start:
+        return json.loads(text[start:end])
+
+Step 3 — add a debug print to the failing skill to see the raw Claude response:
+    print(f"[Skill] Raw: {response.content[0].text[:300]}")
+  This immediately shows whether Claude is returning JSON, markdown-wrapped JSON,
+  or something unexpected. Remove the print after fixing.
+
+Step 4 — if the prompt is not specific enough, strengthen the instruction:
+  For list-returning skills: "Return ONLY a valid JSON array [...]. No markdown."
+  For dict-returning skills: "Return ONLY a valid JSON object {...}. No markdown."
+  The word "ONLY" is important — Claude tends to add preamble without it.</div>
+<button class="copy-btn" onclick="cp('pfix4',this)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" stroke-width="1"/></svg> Copy</button>
+</div>
+</div>
+
+</div><!-- end .page -->
+
+<script>
+const STORAGE_KEY = 'sentinel.ai_d5_done';
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); } catch(e){}
+
+const ALL_IDS = ['c0','c1a','c1b','c1c','c2a','c2b','c3a','c4a','c4b','c4c','c4d',
+  'c5a','c5b','c5c','c5d','c5e','fix1','fix2','fix3','fix4'];
+const total = ALL_IDS.length;
+
+function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify([...done])); }catch(e){} }
+
+function updateProgress(){
+  const n = done.size;
+  document.getElementById('prog-text').textContent = n + ' of ' + total + ' done';
+  document.getElementById('prog-bar').style.width = Math.round(n/total*100) + '%';
+}
+
+function tog(id){
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const isOpen = body.classList.contains('open');
+  if(isOpen){ body.classList.remove('open'); chev.classList.remove('open'); }
+  else { body.classList.add('open'); chev.classList.add('open'); }
+  if(!done.has(id)){ done.add(id); save(); updateProgress(); }
+}
+
+function cp(id, btn){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+  }).catch(()=>{ btn.textContent = 'Select and copy manually'; });
+}
+
+function resetAll(){
+  if(!confirm('Reset all Day 5 progress?')) return;
+  done.clear(); save(); updateProgress();
+}
+
+updateProgress();
+</script>
+</body>
+</html>
+HTMLEOF
+echo "Done — file size: $(wc -c < /mnt/user-data/outputs/sentinel.ai_Day5_Cursor_Prompts.html) bytes"
+Output
+
+Done — file size: 62336 bytes

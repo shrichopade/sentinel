@@ -1,0 +1,62 @@
+GDPR DATA BREACH NOTIFICATION EMAIL
+================================================================================
+
+From: Data Protection Officer <dpo@company.com>
+To: mic_sim@myemail.com
+Date: 21 April 2026
+Subject: URGENT - Data Breach Notification
+
+Dear Michael Smith,
+
+We are writing to inform you of a data security incident that may have affected your 
+personal information held by our company.
+
+INCIDENT DETAILS
+================================================================================
+Incident Date: 18 April 2026
+Discovery Date: 20 April 2026
+Notification Date: 21 April 2026
+
+INFORMATION AFFECTED
+================================================================================
+The following personal data may have been compromised:
+- Full Name: Michael Smith
+- Email Address: mic_sim@myemail.com
+- Postal Address: 100, Buck Road, Manchester, MA91 08H, United Kingdom
+- Account Number: ACC-2024-002
+
+RESPONSE MEASURES
+================================================================================
+1. Incident has been immediately escalated to UK authorities and ICO
+2. Forensic analysis is currently in progress
+3. All affected user accounts have been temporarily restricted
+4. A dedicated incident response team has been activated
+
+YOUR RESPONSIBILITIES
+================================================================================
+1. Change your account password immediately
+2. Review your account activity for any unauthorized access
+3. Enable multi-factor authentication for added security
+4. Report any suspicious activity to our security team at security@company.com
+5. Consider placing a fraud alert with your bank if applicable
+
+NOTICE REQUIREMENTS
+================================================================================
+This notification is being issued within 30 days of the breach discovery as required 
+under GDPR Article 33. Claims related to this breach must be submitted by 21 May 2026.
+
+CONTACT INFORMATION
+================================================================================
+Data Protection Officer
+Email: dpo@company.com
+Incident Response Team: security@company.com
+Phone: +44 (0) 161 234 5678
+
+We sincerely apologize for any inconvenience this may cause and appreciate your 
+patience as we work to resolve this matter.
+
+Yours faithfully,
+
+The Data Protection and Security Team
+Company Name
+================================================================================

@@ -1,0 +1,58 @@
+GDPR DATA BREACH NOTIFICATION EMAIL
+================================================================================
+
+From: Data Protection Officer <dpo@company.com>
+To: alex_taylor@email.com
+Date: 21 April 2026
+Subject: URGENT - Data Breach Notification
+
+Dear Alex Taylor,
+
+We are writing to inform you of a data breach incident that may have affected your 
+personal information.
+
+INCIDENT DETAILS
+================================================================================
+Incident Date: 15 April 2026
+Discovery Date: 20 April 2026
+Notification Date: 21 April 2026
+
+INFORMATION AFFECTED
+================================================================================
+The following personal data may have been compromised:
+- Full Name: Alex Taylor
+- Email Address: alex_taylor@email.com
+- Postal Address: 101, London Road, West London, EC90 09A, United Kingdom
+- Account Number: ACC-2024-001
+
+IMMEDIATE ACTIONS TAKEN
+================================================================================
+1. The breach has been reported to the Information Commissioner's Office (ICO)
+2. All affected systems have been secured
+3. An investigation is underway to determine the full scope of the breach
+4. Additional security measures have been implemented
+
+WHAT YOU SHOULD DO
+================================================================================
+1. Monitor your financial accounts for suspicious activity
+2. Change your password immediately
+3. Enable two-factor authentication where available
+4. Be cautious of phishing attempts related to this incident
+5. Contact us if you notice any unauthorized account activity
+
+COMPENSATION WINDOW
+================================================================================
+This notification must be sent within 30 days of discovery of the breach as per 
+GDPR Article 33 requirements. If you wish to file a claim, the deadline for 
+submission is 30 May 2026.
+
+For further information or to report concerns, please contact:
+Data Protection Officer
+Email: dpo@company.com
+Phone: +44 (0) 20 7946 0958
+
+Yours faithfully,
+
+The Data Protection Team
+Company Name
+================================================================================

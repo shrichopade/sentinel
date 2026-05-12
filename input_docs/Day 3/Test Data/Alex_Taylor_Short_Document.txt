@@ -1,0 +1,8 @@
+SUBSCRIPTION CONFIRMATION
+================================================================================
+
+Customer: Alex Taylor
+Email: alex_taylor@email.com
+Address: 101, London Road, West London, EC90 09A, United Kingdom
+
+Your subscription is confirmed.

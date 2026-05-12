@@ -1,0 +1,27 @@
+Create the file frontend/src/pages/ActivityLog.jsx for the PCGA project.
+
+This page renders a chronological activity feed of every step taken by the orchestrator. The API base URL is http://localhost:8000.
+
+On mount: call GET /activity via axios and store results in state. Show a loading state while fetching.
+
+Layout:
+- Page heading: "Activity log" (h1, text-2xl font-medium mb-6)
+- If no entries: show "No activity recorded yet."
+- If entries exist: render a vertical timeline list
+
+Timeline visual:
+- Draw a thin vertical line (1px, bg-gray-200) down the left side of the list using a relatively-positioned container
+- Each entry is a flex row: a dot on the left (absolute-positioned circle, 10px, on the vertical line) and the entry content to the right
+- Dot colour: gray for autonomous steps (is_autonomous = true), blue for human-triggered steps (is_autonomous = false)
+
+Each entry content (text-sm):
+- First line: relative timestamp (e.g. "2 hours ago") — use a simple helper function: if less than 60s ago show "just now", less than 60m show "X mins ago", less than 24h show "X hours ago", else show the date string. Place this on the right in text-xs text-gray-400.
+- Second line: agent_name in a small gray pill badge + tool_called in monospace text-gray-700
+- Third line: summary text (text-gray-600, normal weight)
+- Fourth line (if link exists): a small "View document" link in text-blue-500 text-xs
+
+Tag the entry with "Autonomous" (gray pill) or "Human review" (blue pill) based on is_autonomous.
+
+Add a thin horizontal separator between entries (except after the last one).
+
+Add this page to App.js as a fourth tab "Activity log" alongside the existing Document Vault, Action Queue, and Chat tabs. Import it from ./pages/ActivityLog and render when page === "activity".

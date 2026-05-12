@@ -1,0 +1,58 @@
+---
+description: Code commenting standards for Sentinel.AI — plain English comments for non-technical readers
+alwaysApply: true
+---
+
+# Code Comments — Plain English for Non-Technical Readers
+
+The user building this project does not have a strong coding background. Every file you create or edit must include comments that explain **what the code does and why**, in plain English.
+
+## Rules
+
+- Add a short comment above every function explaining what it does, what it takes in, and what it gives back.
+- Add inline comments on any line that is not immediately obvious to a beginner.
+- Never assume the reader knows Python/JS jargon — spell it out.
+- Keep comments short (1–2 lines max per comment).
+- Do NOT state the obvious (e.g. `# import os` above `import os`).
+
+## Examples
+
+```python
+# ❌ BAD — no comments, hard to follow
+def classify_document(raw_text):
+    response = client.messages.create(...)
+    text = response.content[0].text
+    return json.loads(text)
+
+# ✅ GOOD — beginner can follow along
+def classify_document(raw_text: str) -> dict:
+    # Ask Claude AI to read the document and return structured data about it
+    response = client.messages.create(...)
+
+    # Pull the text out of Claude's reply
+    text = response.content[0].text
+
+    # Convert the JSON string into a Python dictionary we can work with
+    return json.loads(text)
+```
+
+```javascript
+// ❌ BAD
+useEffect(() => { fetch("/health").then(r => r.json()).then(setStatus) }, []);
+
+// ✅ GOOD
+useEffect(() => {
+  // When the page first loads, check if the backend server is reachable
+  fetch("/health")
+    .then(r => r.json())       // parse the JSON response
+    .then(setStatus)           // store the result in component state
+}, []);  // empty array means this only runs once, on first load
+```
+
+## File-level header
+
+Every new file should start with a 1–2 line comment describing what the file is for:
+
+```python
+# ingestion.py — handles reading PDF files and sending them to Claude AI for classification
+```

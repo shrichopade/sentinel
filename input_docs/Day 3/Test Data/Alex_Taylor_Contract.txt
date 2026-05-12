@@ -1,0 +1,34 @@
+SERVICE AGREEMENT
+================================================================================
+
+CLIENT DETAILS
+================================================================================
+Name: Alex Taylor
+Email: alex_taylor@email.com
+Address: 101, London Road, West London, EC90 09A, United Kingdom
+Account Number: ACC-2024-001
+Date: 26 April 2026
+
+TERMS AND CONDITIONS
+================================================================================
+
+1. The Company agrees to provide professional services as outlined in this agreement.
+
+2. Payment terms are Net 30 days from invoice date.
+
+3. The Company reserves the right to modify services upon 30 days written notice.
+
+4. All data processed under this agreement shall comply with GDPR regulations.
+
+5. Termination requires 60 days written notice from either party.
+
+6. Liability is limited to the total amount paid in the preceding 12 months.
+
+ACKNOWLEDGEMENT
+================================================================================
+
+I acknowledge that I have read and understood the terms and conditions outlined above 
+and agree to be bound by them.
+
+Signature: ____________________________
+Date: ____________________________

@@ -1,0 +1,352 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.tracker{padding:1rem 0}
+.progress-bar-wrap{background:var(--color-border-tertiary);border-radius:4px;height:6px;margin-bottom:1.5rem;overflow:hidden}
+.progress-bar-fill{height:6px;border-radius:4px;background:var(--color-text-success);transition:width .35s ease}
+.progress-label{font-size:13px;color:var(--color-text-secondary);margin-bottom:6px;display:flex;justify-content:space-between}
+.phase{margin-bottom:1.5rem;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.phase-header{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;background:var(--color-background-secondary)}
+.phase-header:hover{background:var(--color-background-tertiary)}
+.phase-badge{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.phase-title{font-size:14px;font-weight:500;color:var(--color-text-primary);flex:1}
+.phase-chevron{width:14px;height:14px;transition:transform .2s;flex-shrink:0}
+.phase-chevron.open{transform:rotate(90deg)}
+.phase-body{border-top:0.5px solid var(--color-border-tertiary)}
+.task{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer}
+.task:last-child{border-bottom:none}
+.task:hover{background:var(--color-background-secondary)}
+.task.done .task-text{color:var(--color-text-tertiary);text-decoration:line-through}
+.task.done .task-detail{color:var(--color-text-tertiary)}
+.task-check{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--color-border-secondary);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s}
+.task.done .task-check{background:var(--color-background-success);border-color:var(--color-border-success)}
+.task-check svg{display:none}
+.task.done .task-check svg{display:block}
+.task-content{flex:1;min-width:0}
+.task-text{font-size:13px;color:var(--color-text-primary);line-height:1.45;font-weight:500}
+.task-detail{font-size:12px;color:var(--color-text-secondary);margin-top:3px;line-height:1.6}
+.phase-progress{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
+.tag{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:3px;margin-right:4px;vertical-align:middle}
+.tag-ok{background:var(--color-background-success);color:var(--color-text-success)}
+.tag-warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.tag-new{background:var(--color-background-info);color:var(--color-text-info)}
+.reset-btn{font-size:12px;color:var(--color-text-secondary);background:none;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:5px 12px;cursor:pointer;margin-top:4px}
+.reset-btn:hover{background:var(--color-background-secondary)}
+</style>
+
+<h2 class="sr-only">PCGA Day 3 developer task checklist — HITL, Guardrails and Action Queue UI, with progress tracking</h2>
+
+<div class="tracker">
+  <div class="progress-label">
+    <span>Day 3 progress</span>
+    <span id="prog-text">0 of 0 tasks done</span>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-bar" style="width:0%"></div></div>
+  <div id="phases"></div>
+  <button class="reset-btn" onclick="resetAll()">Reset all</button>
+</div>
+
+<script>
+const phases = [
+  {
+    id:'p0',
+    label:'Start of day',
+    badge:'15 min',
+    badgeColor:'#D3D1C7', badgeText:'#444441',
+    title:'Start-of-day checks',
+    tasks:[
+      {
+        text:'Confirm your Day 2 checkpoint still passes',
+        detail:'Run both servers and call POST /analyse on your test document. Confirm the terminal shows 5 tool calls, a pending action appears in Supabase, and agent_steps has rows. If any of these fail, fix them before writing new code — Day 3 builds directly on top of this.'
+      },
+      {
+        text:'Sign up for a Resend account and get your API key',
+        detail:'Go to resend.com and create a free account. The free tier allows 3,000 emails per month, which is plenty. Go to the API Keys section, create a key, and copy it. Add RESEND_API_KEY to your backend/.env file. You will also need to verify a sending email address — use your own email so you can receive the test letter you will send at end of day.'
+      },
+      {
+        text:'Install the Resend Python package',
+        detail:'From your backend/ folder with the virtual environment active, install the Resend SDK. It is a single lightweight package with no heavy dependencies.'
+      },
+      {
+        text:'Create two new backend files',
+        detail:'Create backend/agents/guardrails.py and backend/api/email.py as empty files. This keeps the structure clean and lets Cursor auto-complete imports correctly from the start.'
+      }
+    ]
+  },
+  {
+    id:'p1',
+    label:'Hour 1',
+    badge:'~60 min',
+    badgeColor:'#CECBF6', badgeText:'#3C3489',
+    title:'Guardrail layer — post-processing pipeline on all agent outputs',
+    tasks:[
+      {
+        text:'Understand what the guardrail layer does before writing it',
+        detail:'The guardrail layer is not part of the agentic loop — it runs after the loop exits, before the output reaches either the user or the database. Think of it as a quality-control step: it checks the content for problems and attaches warnings. Every risk finding, letter draft, and legal summary must pass through it. It never blocks output — it annotates it with warnings so the user can make an informed decision.'
+      },
+      {
+        text:'Build the citation-check function',
+        detail:'In guardrails.py, write a function that receives the letter or finding text and looks for any factual claim that does not include a citation marker (something like [1] or [Source]). If it finds uncited claims, it appends a warning message to the output and marks the specific sentences with a visible flag so the user knows which claims are unsupported. Keep this function simple — a regex check for citation markers is sufficient for Day 3.'
+      },
+      {
+        text:'Build the legal caveat injection function',
+        detail:'Write a function that appends a standard disclaimer to any output of type risk_assessment, letter_draft, or legal_finding. The caveat should be short: something like "This is an AI-generated summary. Review with a professional before acting." Store the caveat text as a constant so it is easy to update later without touching the function logic.'
+      },
+      {
+        text:'Build the PII detection and redaction function',
+        detail:'Write a function that scans the output text for common UK personal identifiers: National Insurance numbers (format XX123456X), sort codes (XX-XX-XX), bank account numbers (8 digits), and passport numbers. Use Python regular expressions to find them. If any are found, replace each match with a placeholder like [REDACTED-NI] or [REDACTED-ACCOUNT] and append a warning noting that identifiers were redacted. This is a safety net — the agent should not be including these in outputs, but the guardrail catches any that slip through.'
+      },
+      {
+        text:'Build the scope escalation check',
+        detail:'Write a function that checks whether the output contains language that implies a recommendation beyond the system\'s authority tier — for example, phrases like "you should sue", "take legal action", "file a police report", or "contact the Financial Ombudsman". If it detects these, set an escalate flag on the output and attach an escalation_reason string: "This situation may require professional legal or financial advice." The UI will later use this flag to show a special callout on the action card.'
+      },
+      {
+        text:'Wire all four checks into a single apply_guardrails() function',
+        detail:'Write the main entry point in guardrails.py. It takes an output dict (with a content field) and an output_type string. It runs all four checks in sequence: citation check, caveat injection, PII scan, scope check. It returns the modified output dict with a warnings list attached. Each check adds to the warnings list if it finds something — the list is empty if the output is clean.'
+      },
+      {
+        text:'Wire apply_guardrails() into the orchestrator',
+        detail:'Open backend/agents/orchestrator.py. Find where the working_memory is returned at the end of the orchestrate() function. Before returning, pass the final action item\'s draft content through apply_guardrails() with output_type set to "letter_draft". Store any warnings back onto the action item. This ensures every letter that reaches the HITL queue has already been checked.'
+      },
+      {
+        text:'Test guardrails manually',
+        detail:'Write a quick test in a Python shell: create a fake output dict with a letter that contains no citation markers, then call apply_guardrails() on it. Confirm the warnings list is not empty and the text has been annotated. Also test the PII check by including a fake NI number in the content and confirming it gets redacted.',
+        tag:'verify'
+      }
+    ]
+  },
+  {
+    id:'p2',
+    label:'Hours 2–3',
+    badge:'~120 min',
+    badgeColor:'#CECBF6', badgeText:'#3C3489',
+    title:'HITL action queue backend — 6 endpoints + email send',
+    tasks:[
+      {
+        text:'Add a new /actions router file',
+        detail:'Create backend/api/actions.py. This will hold all six action-related endpoints. Using a separate file keeps main.py clean. In main.py, import the router and mount it — this is the same pattern you would use in any larger FastAPI project.'
+      },
+      {
+        text:'Build GET /actions — list pending actions',
+        detail:'This endpoint queries the Supabase actions table for all rows where status is "pending", ordered by severity (critical first, then high, medium, low). It joins with the documents table to also return the vendor name and document type for display on the card. Return a list of summary objects — not the full draft content, to keep the list response fast.'
+      },
+      {
+        text:'Build GET /actions/{id} — full action detail',
+        detail:'This endpoint returns a single action by its UUID. It should return everything: the full draft_content letter, the reasoning field, the sources JSON array of cited chunk IDs, the warnings list from the guardrail pass, the severity and escalate flag, and the related document metadata. The frontend will call this when the user clicks into a specific card.'
+      },
+      {
+        text:'Build PUT /actions/{id}/approve — mark approved',
+        detail:'This endpoint updates the action\'s status field to "approved" and sets actioned_at to the current timestamp. It does not send the email — that is a separate step requiring the second confirmation. After updating the row, it should also call your memory write function to record that the user approved this type of action for this vendor. Return the updated action row.'
+      },
+      {
+        text:'Build PUT /actions/{id}/reject — mark rejected',
+        detail:'Updates status to "rejected", sets actioned_at, and accepts an optional reason body parameter. Writes a memory entry recording the rejection and the reason. This is how the system learns that the user did not want this type of letter for this vendor.'
+      },
+      {
+        text:'Build PUT /actions/{id}/edit — update draft content',
+        detail:'Accepts a new draft_content string in the request body and updates the actions table row. Status stays as "pending" — editing does not approve. Return the updated row. This is what the frontend calls when the user modifies the text in the editable textarea before approving.'
+      },
+      {
+        text:'Build the email send helper in email.py',
+        detail:'In backend/api/email.py, write a send_letter() function that takes a recipient email, subject line, and letter body. It calls the Resend API with these values. It should return a success/failure dict. The function should raise an explicit error if RESEND_API_KEY is not set, so misconfiguration is caught early rather than producing a silent failure.'
+      },
+      {
+        text:'Build POST /actions/{id}/send — execute approved action',
+        detail:'This is the most safety-critical endpoint. Before doing anything else, check that the action\'s status is "approved" — if it is not, return a 403 Forbidden response immediately. If it is approved, call send_letter() with the draft content. If the send succeeds, update the action status to "sent" and record the timestamp. If the send fails, return an error without changing the status so the user can retry. This guard — 403 if not approved — ensures the email cannot be sent without going through the approval flow.'
+      },
+      {
+        text:'Register all routes in main.py',
+        detail:'Import your actions router in main.py and include it with the correct prefix. Start the backend server and use curl to test GET /actions — it should return your pending action from Day 2. If it returns an empty list, check that the Day 2 /analyse call succeeded and that the actions table has rows in Supabase.',
+        tag:'verify'
+      }
+    ]
+  },
+  {
+    id:'p3',
+    label:'Hours 4–6',
+    badge:'~180 min',
+    badgeColor:'#CECBF6', badgeText:'#3C3489',
+    title:'Action Queue UI — the most important surface of the week',
+    tasks:[
+      {
+        text:'Understand what this page must communicate before opening your editor',
+        detail:'The Action Queue page is where trust is built or broken. The user needs to immediately understand: what the problem is (severity + summary), why the agent flagged it (reasoning chain), what the agent proposes to do about it (draft letter), and whether they agree. Every UI decision should serve those four goals. Do not start coding until you have a mental picture of a card that answers all four.'
+      },
+      {
+        text:'Create frontend/src/pages/ActionQueue.jsx',
+        detail:'Create the page file. On mount, it calls GET /actions and stores the list in component state. Sort the displayed cards by severity — critical first. Show a loading state while the API call is in flight and an empty state if there are no pending actions.'
+      },
+      {
+        text:'Build the ActionCard component',
+        detail:'Create frontend/src/components/ActionCard.jsx. Each card receives a single action object as a prop and renders: a coloured severity badge (use red for critical/high, amber for medium, green for low), the vendor name and document type as the card header, the one-sentence summary, a collapsible section for the reasoning chain (expanded by default for critical and high severity), an editable textarea pre-filled with the draft letter, a row of source chips that each show the first 40 characters of the cited chunk, and three buttons at the bottom: Approve and Send, Edit Draft, Reject.'
+      },
+      {
+        text:'Wire the Edit Draft button',
+        detail:'Clicking Edit Draft should change the textarea from read-only to editable. When the user finishes editing and clicks a Save button that appears, call PUT /actions/{id}/edit with the updated text and show a brief confirmation. The card then returns to its display state showing the new draft.'
+      },
+      {
+        text:'Wire the Reject button',
+        detail:'Clicking Reject should show a small inline input asking for an optional reason, plus a Confirm Rejection button. On confirm, call PUT /actions/{id}/reject. Remove or grey out the card in the list and show a brief success message. The card should not disappear instantly — give the user a second to see the outcome before it fades.'
+      },
+      {
+        text:'Build the confirmation modal for Approve and Send',
+        detail:'This is the most important interaction on the page. When the user clicks Approve and Send, do NOT call the API immediately. Instead, show a modal that contains: the recipient email address (hardcoded to the developer\'s verified Resend email for now), the full letter text in a read-only block, a bold warning that reads "This will send a real email to this address", and two buttons: Cancel and Confirm and Send. Only on the second click of Confirm and Send does the frontend call POST /actions/{id}/send. This two-step flow is the HITL guardrail for write actions.'
+      },
+      {
+        text:'Handle the send response in the UI',
+        detail:'If the send API call returns success, update the card\'s status badge to "Sent" and disable all three action buttons. Show a green confirmation banner at the top of the page. If it returns an error, show a red error message below the confirm button and leave the action in its approved state so the user can retry.'
+      },
+      {
+        text:'Show guardrail warnings on the card',
+        detail:'The action detail response from GET /actions/{id} includes a warnings array from the guardrail pass. If this array is not empty, show each warning as an amber callout block above the draft letter. If the escalate flag is true, show a special callout in a distinct colour: "This situation may require professional legal advice." These callouts should be prominent — not tiny footnotes.'
+      },
+      {
+        text:'Add the ActionQueue page to your App.js navigation',
+        detail:'Add a third tab to your top nav bar: Action Queue. Load the ActionQueue page component when this tab is active. Test the full card rendering by loading the page and confirming you see the pending action created by your Day 2 test run.',
+        tag:'verify'
+      }
+    ]
+  },
+  {
+    id:'p4',
+    label:'Hour 7',
+    badge:'~60 min',
+    badgeColor:'#CECBF6', badgeText:'#3C3489',
+    title:'Activity Log UI — observable agent behaviour',
+    tasks:[
+      {
+        text:'Add a GET /activity endpoint to the backend',
+        detail:'In backend/api/actions.py (or a new activity.py file if you prefer), add an endpoint that queries the agent_steps table ordered by created_at descending. Accept an optional document_id query parameter so the frontend can filter by document. Return each step with its timestamp, agent_name, tool_called, summary, and a link field constructed from the document_id.'
+      },
+      {
+        text:'Create frontend/src/pages/ActivityLog.jsx',
+        detail:'Create the page. On mount, call GET /activity. Render a chronological list — newest entries at the top. Each entry shows: a relative timestamp (e.g. "2 hours ago"), the agent name in a small badge, a one-sentence description of what happened (from the summary field), a tag showing whether it was autonomous or human-triggered, and a clickable link to the related document (which opens the Document Vault filtered to that document).'
+      },
+      {
+        text:'Style the feed to be scannable at a glance',
+        detail:'Use a thin vertical line on the left connecting all entries — this gives the visual impression of a timeline. Each entry should have an icon-like indicator on the line: a dot for autonomous steps, a person shape or distinct dot colour for human actions. Keep the text size small (12–13px) since this is a dense information feed. The goal is that a developer can scan 20 entries in under 10 seconds and spot the anomaly.'
+      },
+      {
+        text:'Add Activity Log to the App.js navigation',
+        detail:'Add a fourth tab to the nav: Activity Log. Wire it to the ActivityLog page component. Verify that when you load the page, you see the 5 agent_steps entries from your Day 2 test run. Each entry should show the tool name and a short summary.',
+        tag:'verify'
+      }
+    ]
+  },
+  {
+    id:'p5',
+    label:'End of day',
+    badge:'30 min',
+    badgeColor:'#C0DD97', badgeText:'#27500A',
+    title:'End-of-day checkpoint — full HITL flow, end to end',
+    tasks:[
+      {
+        text:'Run the complete Day 3 scenario from scratch',
+        detail:'Start with a fresh PDF (different from your Day 1/2 test document if possible). Upload it via the Document Vault page. Call POST /analyse to trigger the orchestrator. Watch the terminal to confirm 5 sub-agent calls ran. Then open the Action Queue page — you should see one pending action card with a severity badge, a summary, and a draft letter.',
+        tag:'verify'
+      },
+      {
+        text:'Test the edit flow',
+        detail:'Click Edit Draft on the action card. Modify the letter — add a sentence or change the recipient name. Click Save. Confirm the textarea updates and the API call succeeded (check the browser DevTools network tab — you should see a 200 from PUT /actions/{id}/edit).',
+        tag:'verify'
+      },
+      {
+        text:'Test the approval and send flow',
+        detail:'Click Approve and Send. Confirm the modal appears with the full letter text and the warning message. Click Cancel — the modal should close with no API call. Click Approve and Send again, then Confirm and Send. Check your inbox for the real email. Confirm the card updates to status "Sent". This is the most important test of the day.',
+        tag:'verify'
+      },
+      {
+        text:'Check the Activity Log',
+        detail:'Open the Activity Log page. Confirm it shows all orchestrator steps from this run. Check that timestamps are correct and summaries are readable. This log is also your debugging tool — if something went wrong in the pipeline, this is where you would look first.',
+        tag:'verify'
+      },
+      {
+        text:'Note any guardrail warnings that appeared',
+        detail:'If your draft letter showed any amber warning callouts (uncited claims, redacted PII, escalation flags), note what triggered them. These are useful signal about your prompts — if the drafter consistently produces uncited claims, the drafter\'s system prompt needs to be tightened. Record this for Day 5\'s testing and polish session.'
+      }
+    ]
+  }
+];
+
+let done = new Set();
+try { done = new Set(JSON.parse(localStorage.getItem('pcga_d3') || '[]')); } catch(e){}
+
+const total = phases.reduce((s,p) => s + p.tasks.length, 0);
+
+function save(){ try{ localStorage.setItem('pcga_d3', JSON.stringify([...done])); }catch(e){} }
+
+function updateProgress(){
+  const n = done.size;
+  document.getElementById('prog-text').textContent = `${n} of ${total} tasks done`;
+  document.getElementById('prog-bar').style.width = `${Math.round(n/total*100)}%`;
+  phases.forEach(p => {
+    const pd = p.tasks.filter((_,i) => done.has(p.id+'-'+i)).length;
+    const el = document.getElementById('pp-'+p.id);
+    if(el) el.textContent = `${pd}/${p.tasks.length}`;
+  });
+}
+
+function toggleTask(phaseId, idx){
+  const key = phaseId+'-'+idx;
+  done.has(key) ? done.delete(key) : done.add(key);
+  save();
+  const el = document.getElementById('task-'+phaseId+'-'+idx);
+  if(el) el.classList.toggle('done', done.has(key));
+  updateProgress();
+}
+
+function togglePhase(id){
+  const body = document.getElementById('body-'+id);
+  const chev = document.getElementById('chev-'+id);
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chev.classList.toggle('open', !open);
+}
+
+function resetAll(){
+  if(!confirm('Reset all Day 3 progress?')) return;
+  done.clear(); save();
+  document.querySelectorAll('.task').forEach(t => t.classList.remove('done'));
+  updateProgress();
+}
+
+function renderPhases(){
+  document.getElementById('phases').innerHTML = phases.map(p => {
+    const pd = p.tasks.filter((_,i) => done.has(p.id+'-'+i)).length;
+    const tasksHtml = p.tasks.map((t,i) => {
+      const key = p.id+'-'+i;
+      const isDone = done.has(key);
+      const tagHtml = t.tag === 'verify' ? '<span class="tag tag-ok">verify</span>'
+                    : t.tag === 'warn'   ? '<span class="tag tag-warn">important</span>'
+                    : t.tag === 'new'    ? '<span class="tag tag-new">new file</span>'
+                    : '';
+      return `<div class="task${isDone?' done':''}" id="task-${p.id}-${i}" onclick="toggleTask('${p.id}',${i})">
+        <div class="task-check">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4l3 3L9 1" stroke="var(--color-text-success)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="task-content">
+          <div class="task-text">${tagHtml}${t.text}</div>
+          ${t.detail ? `<div class="task-detail">${t.detail}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="phase">
+      <div class="phase-header" onclick="togglePhase('${p.id}')">
+        <span class="phase-badge" style="background:${p.badgeColor};color:${p.badgeText}">${p.label}</span>
+        <span class="phase-title">${p.title}</span>
+        <span class="phase-progress" id="pp-${p.id}">${pd}/${p.tasks.length}</span>
+        <svg class="phase-chevron open" id="chev-${p.id}" viewBox="0 0 14 14" fill="none">
+          <path d="M5 3l4 4-4 4" stroke="var(--color-text-secondary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="phase-body" id="body-${p.id}">${tasksHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+renderPhases();
+updateProgress();
+</script>

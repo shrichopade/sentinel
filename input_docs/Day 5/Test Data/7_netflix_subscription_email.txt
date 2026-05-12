@@ -1,0 +1,47 @@
+From: info@mailer.netflix.com
+To: job_doe@youremail.com
+Date: 28 Apr 2025
+Subject: Your Netflix plan has been updated
+
+Hi John,
+
+We wanted to let you know that your Netflix subscription has been updated.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUBSCRIPTION CHANGE SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Previous Plan  : Standard (1080p, 2 screens)   £10.99/month
+New Plan       : Standard with Ads removed +    £17.99/month
+                 Extra Member slot added
+Effective from : 28 May 2025
+Monthly increase: £7.00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your updated plan includes:
+  ✓ Full HD streaming (1080p)
+  ✓ 2 simultaneous screens
+  ✓ Downloads on 2 devices
+  ✓ No adverts
+
+Your next billing date is the 27 of each month.
+Your new monthly charge of £17.99 will be collected automatically.
+
+To manage your plan, visit: netflix.com/account
+
+Thanks for being a member,
+The Netflix Team
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINANCIAL ANOMALY NOTE (for Steward/Financial Analyst agent)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Price increase of £7.00/month applied 28 May 2025 — 6 months ago.
+Cumulative additional spend since increase: £42.00
+This change appears to have gone unnoticed by the account holder.
+
+The Financial Analyst sub-agent should flag this recurring subscription drift.
+Account holder should review whether the new plan features are required, or
+whether downgrading/cancelling would be more cost-effective.
+
+Netflix ref: NF-SUB-JOB_DOE-2024
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

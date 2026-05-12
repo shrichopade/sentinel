@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sentinel icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#g)"/>
+  <!-- Shield -->
+  <path
+    d="M32 16c7 5 14 6 14 6v14c0 10-6.6 17-14 19-7.4-2-14-9-14-19V22s7-1 14-6z"
+    fill="#ffffff"
+    opacity="0.95"
+  />
+  <!-- Check -->
+  <path
+    d="M25.5 33.5l4.2 4.2L39 28.4"
+    fill="none"
+    stroke="#0f172a"
+    stroke-width="4.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+

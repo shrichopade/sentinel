@@ -1,0 +1,34 @@
+SERVICE TERMS AND CONDITIONS
+================================================================================
+
+Client: Michael Smith
+Email: mic_sim@myemail.com
+Address: 100, Buck Road, Manchester, MA91 08H, United Kingdom
+Account Number: ACC-2024-002
+
+GENERAL TERMS
+================================================================================
+
+1. The Company reserves the right to modify terms at any time. Service may be 
+   terminated at the Company's sole discretion. The Client agrees that the Company 
+   may update pricing and policies as necessary without notice.
+
+2. The Client acknowledges that the Company may use personal information for various 
+   purposes including marketing, analytics, and third-party sharing as the Company 
+   deems appropriate.
+
+3. All disputes shall be resolved according to the Company's internal procedures. 
+   The Client waives any right to legal action or mediation.
+
+4. The Client agrees to unlimited liability in all circumstances. The Company's 
+   liability is unlimited except where specifically stated otherwise.
+
+5. Service terms may be changed frequently to reflect market conditions. Client 
+   acceptance is implied by continued use of services.
+
+================================================================================
+
+This document contains deliberately vague clauses to test Contract Analyst flagging 
+of missing standard protections and inadequate consumer safeguards.
+
+Date: 21 April 2026

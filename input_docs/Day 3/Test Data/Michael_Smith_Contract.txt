@@ -1,0 +1,34 @@
+SERVICE AGREEMENT
+================================================================================
+
+CLIENT DETAILS
+================================================================================
+Name: Michael Smith
+Email: mic_sim@myemail.com
+Address: 100, Buck Road, Manchester, MA91 08H, United Kingdom
+Account Number: ACC-2024-002
+Date: 26 April 2026
+
+TERMS AND CONDITIONS
+================================================================================
+
+1. The Service Provider shall maintain confidentiality of all client information.
+
+2. Monthly billing cycle with payment due within 45 days of invoice date.
+
+3. The Client may request service modifications with a minimum of 15 days notice.
+
+4. All communications must be conducted in English and comply with UK law.
+
+5. Either party may terminate this agreement with 90 days written notice.
+
+6. Insurance coverage must be maintained at minimum levels specified in Schedule A.
+
+ACKNOWLEDGEMENT
+================================================================================
+
+I acknowledge that I have read and understood the terms and conditions outlined above 
+and agree to be bound by them.
+
+Signature: ____________________________
+Date: ____________________________

@@ -1,0 +1,21 @@
+Create the file backend/api/email.py for the PCGA project.
+
+This module sends letters via the Resend API.
+
+Requirements:
+- Import resend and os. Load RESEND_API_KEY from the environment using python-dotenv.
+- At module load time, check that RESEND_API_KEY is set. If it is not, raise a RuntimeError with the message "RESEND_API_KEY is not set in .env — email sending will not work."
+- Set resend.api_key = os.getenv("RESEND_API_KEY").
+
+Implement one function:
+
+def send_letter(to_email: str, subject: str, body: str) -> dict:
+  Send the letter using resend.Emails.send().
+  The "from" address should be read from the environment variable RESEND_FROM_EMAIL (default to "onboarding@resend.dev" if not set — this is Resend's default test address for unverified domains).
+  The email body should be sent as plain text (not HTML).
+  On success, return {"success": True, "id": response["id"]}.
+  On any exception, catch it, print the error with a [email] prefix, and return {"success": False, "error": str(e)}.
+
+Also add a RESEND_FROM_EMAIL constant at the top that reads from the environment.
+
+No other functions are needed. Keep the file under 40 lines.

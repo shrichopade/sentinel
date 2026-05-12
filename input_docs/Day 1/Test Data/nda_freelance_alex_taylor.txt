@@ -1,0 +1,75 @@
+MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of 
+15th March 2026 ("Effective Date")
+
+BETWEEN:
+
+(1) TechStart Solutions Ltd
+    Company Number: 08473629
+    Registered Office: 124 City Road, London, EC1V 2NX
+    ("Party A")
+
+AND:
+
+(2) Alex Taylor
+    Address: 101, London Road, West London, EC90 09A, United Kingdom
+    Email: alex_taylor@email.com
+    ("Party B")
+
+(Each a "Party" and together the "Parties")
+
+BACKGROUND
+
+The Parties wish to explore a potential business relationship regarding freelance design and 
+consulting services for Party A's upcoming product launch. In connection with this 
+relationship, each Party may disclose certain confidential information to the other.
+
+1. DEFINITION OF CONFIDENTIAL INFORMATION
+
+"Confidential Information" means all non-public information disclosed by either Party, 
+whether orally, in writing, or in electronic form, including but not limited to:
+- Business plans and strategies
+- Financial information
+- Customer data and lists
+- Technical specifications and designs
+- Marketing plans and pricing
+
+2. OBLIGATIONS
+
+Each Party agrees to:
+(a) Keep all Confidential Information strictly confidential
+(b) Use Confidential Information only for evaluation of the business relationship
+(c) Not disclose to any third party without prior written consent
+(d) Protect with the same degree of care as their own confidential information
+
+3. TERM
+
+This Agreement shall commence on the Effective Date and continue for a period of 
+2 years, unless terminated earlier by mutual written agreement.
+
+4. RETURN OF MATERIALS
+
+Upon request or termination of discussions, each Party shall return or destroy all 
+Confidential Information and provide written certification of such destruction.
+
+5. GOVERNING LAW
+
+This Agreement shall be governed by the laws of England and Wales.
+
+SIGNED by the Parties:
+
+For TechStart Solutions Ltd
+
+Signature: _________________
+Name: Robert Chen
+Title: Managing Director
+Date: 15/03/2026
+
+For Alex Taylor
+
+Signature: _________________
+Name: Alex Taylor
+Date: 15/03/2026
+
+Page 1 of 2

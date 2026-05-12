@@ -1,0 +1,41 @@
+From: Netflix <info@mailer.netflix.com>
+To: alex_taylor@email.com
+Date: 26 April 2024
+Subject: Your Netflix subscription has been updated
+
+Dear Alex,
+
+Thank you for being a Netflix member.
+
+This is to confirm that your Netflix Standard (with ads) plan has been updated.
+
+YOUR UPDATED PLAN DETAILS
+--------------------------
+Plan:                  Netflix Standard with Ads
+Monthly Price:         £10.99 (previously £6.99)
+Next Billing Date:     26 May 2024
+Payment Method:        Visa ending 4821
+
+WHAT'S CHANGING
+----------------
+We're updating the price of your plan from £6.99 to £10.99 per month, effective
+from your next billing date on 26 May 2024.
+
+Your membership will continue uninterrupted. If you would like to change or
+cancel your plan, you can do so at any time from your Account page at
+netflix.com/account.
+
+HOW TO CANCEL
+--------------
+You may cancel at any time. Cancellation takes effect at the end of your
+current billing period. No partial refunds are issued for cancellations
+mid-cycle.
+
+To cancel: netflix.com/account > Membership & Billing > Cancel Membership
+
+If you have any questions, visit our Help Centre at help.netflix.com
+
+Thanks,
+The Netflix Team
+
+Netflix International B.V., Amstelplein 1, 1096 HA Amsterdam, Netherlands
