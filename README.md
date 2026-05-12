@@ -6,6 +6,14 @@ This tool solves the “admin debt” problem of manually tracking contracts and
 
 ---
 
+## Solution architecture
+
+High-level view of how user-facing surfaces, the intelligence engine (FastAPI + orchestrator + specialist agents), data and retrieval (ingestion, hybrid RAG, memory), and external integrations fit together.
+
+![Sentinel.AI solution architecture](docs/solution-architecture.png)
+
+---
+
 ## Features
 
 - **Restricted Google Drive sync**: only ingests documents from a single configured folder (`DRIVE_FOLDER_ID`).
@@ -39,6 +47,8 @@ The “at a glance” status page. It answers: **“Is the system working and wh
   - **Next scheduled sync time** (when monitoring will run next)
 - Highlights risk by domain (e.g., subscription, housing) using a simple red/amber/green status.
 
+![Dashboard tab](docs/screen-shots/01-Dashboard.png)
+
 ### 2) Document Vault
 
 The document library. It answers: **“What documents have I uploaded/synced and what did the system extract?”**
@@ -46,6 +56,8 @@ The document library. It answers: **“What documents have I uploaded/synced and
 - Upload PDF/TXT documents manually.
 - View all ingested documents with key metadata (vendor, domain, dates, summary).
 - See processing outcomes like chunk counts and obligation counts (where available).
+
+![Document vault tab](docs/screen-shots/02-Document%20Vault.png)
 
 ### 3) Chat
 
@@ -55,6 +67,8 @@ A Q&A interface over your ingested documents. It answers: **“Where in my docum
 - The backend retrieves relevant chunks (semantic + keyword) and returns a grounded answer.
 - The UI displays “sources” so users can verify important claims.
 - Includes simple chat history for a session (local dev convenience).
+
+![Chat tab](docs/screen-shots/04-Chat%20Interface.png)
 
 ### 4) Action Queue
 
@@ -72,12 +86,16 @@ The human-in-the-loop (HITL) decision queue. It answers: **“What does the agen
   - send only after approval (safe-by-default)
 - If an action was created as a fallback due to an incomplete run, the UI can expose a **Continue analysis** option to re-run analysis and overwrite the fallback.
 
+![Action queue tab](docs/screen-shots/03-Action%20Queue.png)
+
 ### 5) Activity Log
 
 The audit + debugging timeline. It answers: **“What happened, when, and why?”**
 
 - Shows a chronological feed of user/system events (uploads, queued analyses, sends, failures).
 - Helps explain agent behaviour during demos and makes failures visible rather than “silent”.
+
+![Activity log tab](docs/screen-shots/05-Activity%20Log.png)
 
 ---
 
