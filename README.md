@@ -12,6 +12,12 @@ High-level view of how user-facing surfaces, the intelligence engine (FastAPI + 
 
 ![Sentinel.AI solution architecture](docs/solution-architecture.png)
 
+### Logical technical architecture
+
+Layered view of the stack: UI → FastAPI gateway → orchestrator and sub-agents → guardrails → RAG (ingestion + hybrid retrieval) → memory → MCP/tools → Supabase and pgvector storage.
+
+![Sentinel.AI logical technical architecture](docs/logical-technical-architecture.png)
+
 ---
 
 ## Features
