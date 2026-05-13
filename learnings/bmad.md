@@ -1,9 +1,9 @@
-# The BMAD Method — applied to Sentinel.AI (detailed)
+# The BMAD Method — applied to sentinel (detailed)
 
-This document explains **The BMAD Method (Breakthrough Method for Agile AI‑Driven Development)** in practical terms and shows **exactly how it would change** how Sentinel.AI is designed, built, tested, operated, and commercialised.
+This document explains **The BMAD Method (Breakthrough Method for Agile AI‑Driven Development)** in practical terms and shows **exactly how it would change** how sentinel is designed, built, tested, operated, and commercialised.
 
 It’s written as both:
-- a **build playbook** you can follow for the next iteration of Sentinel.AI, and
+- a **build playbook** you can follow for the next iteration of sentinel, and
 - an **interview-ready explanation** of “how you ship AI features safely”.
 
 ---
@@ -40,9 +40,9 @@ The “breakthrough” part is not hype—it's about deliberately choosing a nar
 
 ---
 
-## 3) Why BMAD matters for Sentinel.AI specifically
+## 3) Why BMAD matters for sentinel specifically
 
-Sentinel.AI is in a high-trust domain:
+sentinel is in a high-trust domain:
 - it processes **sensitive documents**
 - it drafts **letters that can have legal/financial impact**
 - it runs **background monitoring** that must be reliable
@@ -82,7 +82,7 @@ AI is treated as a component with strict contracts:
 BMAD expects AI systems to fail sometimes.
 The difference is: failures are **classified**, **measured**, and **recoverable**.
 
-For Sentinel.AI examples:
+For sentinel examples:
 - `rate_limited`
 - `incomplete_tool_loop`
 - `parse_failed`
@@ -127,7 +127,7 @@ Minimum recommended:
 - 20–50 real-ish documents (anonymised if needed)
 - 50–200 questions/prompts mapped to expected sources or expected behaviour
 
-For Sentinel.AI, you want 3 eval sets:
+For sentinel, you want 3 eval sets:
 - **Retrieval eval**: “does retrieval return the right chunks?”
 - **Drafting eval**: “does the letter include placeholders, tone, and grounding?”
 - **Safety eval**: “does PII get redacted? does it avoid unsafe advice?”
@@ -193,7 +193,7 @@ Below are practical metrics BMAD expects you to track. These become your “AI r
 
 ---
 
-## 7) BMAD “gates” for Sentinel.AI (what blocks a release)
+## 7) BMAD “gates” for sentinel (what blocks a release)
 
 BMAD uses explicit gates. Here’s what “production-ish” gates could look like.
 
@@ -229,7 +229,7 @@ Block release if:
 
 ---
 
-## 8) How BMAD would change the Sentinel.AI architecture (concrete deltas)
+## 8) How BMAD would change the sentinel architecture (concrete deltas)
 
 ### 8.1 “Runs” become first-class objects
 
@@ -318,7 +318,7 @@ Result: Fewer last-minute regressions, more confidence to ship.
 
 ---
 
-## 10) Concrete BMAD playbook for the next Sentinel.AI iteration
+## 10) Concrete BMAD playbook for the next sentinel iteration
 
 This is an actionable way to run BMAD on your current codebase.
 
@@ -403,7 +403,7 @@ If asked “How do you ship AI features reliably?”, a strong answer is:
 
 ---
 
-## 13) Sentinel.AI-specific examples of BMAD gates and tests (quick list)
+## 13) sentinel-specific examples of BMAD gates and tests (quick list)
 
 - Retrieval returns 0 chunks:
   - user sees “not found” + suggestion + no hallucinated answer

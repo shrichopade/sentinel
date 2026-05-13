@@ -1,4 +1,4 @@
-# Sentinel.AI — Day 1 Solution Design
+# sentinel — Day 1 Solution Design
 
 **Document purpose:** This file describes *what* Day 1 delivers, *how* the pieces fit together, and *why* certain choices were made. It is written for both engineers and readers without a deep coding background.
 

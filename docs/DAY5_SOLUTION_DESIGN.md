@@ -1,4 +1,4 @@
-# Sentinel.AI — Day 5 Solution Design
+# sentinel — Day 5 Solution Design
 
 **Document purpose:** This file describes what Day 5 adds on top of Day 4: integration hardening, “demo-ready” end-to-end flow, regulatory knowledge base expansion, and the portability + learning artefacts that make the system explainable and transferable.
 
@@ -8,7 +8,7 @@
 
 ## 1. Executive summary (plain English)
 
-Day 5 is about making Sentinel.AI feel like a cohesive product: ingestion works reliably, analysis produces grounded results, user approvals lead to real outcomes (email send), and the system is observable and portable.
+Day 5 is about making sentinel feel like a cohesive product: ingestion works reliably, analysis produces grounded results, user approvals lead to real outcomes (email send), and the system is observable and portable.
 
 In one sentence: **Day 5 turns the working prototype into a reliable demo product with clear grounding, recovery paths, and documentation you can ship and explain.**
 

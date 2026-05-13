@@ -1,4 +1,4 @@
-# Sentinel.AI — Day 2 Solution Design
+# sentinel — Day 2 Solution Design
 
 **Document purpose:** This file explains what Day 2 delivers, how the orchestration layer works, and why key design decisions were taken.
 

@@ -1,6 +1,6 @@
-# Sentinel.AI — Overall Solution Design (current working system)
+# sentinel — Overall Solution Design (current working system)
 
-**Document purpose:** This file describes the complete Sentinel.AI vertical slice **as it works today** (not a future wishlist). It stitches together Day 1–5 capabilities into one coherent system design.
+**Document purpose:** This file describes the complete sentinel vertical slice **as it works today** (not a future wishlist). It stitches together Day 1–5 capabilities into one coherent system design.
 
 **Audience:** Engineers and non-technical readers preparing a demo, product brief, or interview discussion.
 
@@ -10,7 +10,7 @@
 
 ## 1. Executive summary (plain English)
 
-Sentinel.AI is a personal compliance and subscription governance assistant. Users upload or sync contracts/emails, the system extracts key details and obligations, then runs an agent workflow to produce **reviewable actions** (draft cancellation/complaint/negotiation letters) that the user must approve before anything is sent.
+sentinel is a personal compliance and subscription governance assistant. Users upload or sync contracts/emails, the system extracts key details and obligations, then runs an agent workflow to produce **reviewable actions** (draft cancellation/complaint/negotiation letters) that the user must approve before anything is sent.
 
 In one sentence: **Documents in → searchable knowledge base + obligations → agentic analysis with guardrails → human approval queue → optional email send → activity log + memory for future personalization.**
 
@@ -171,7 +171,7 @@ sequenceDiagram
 
 ### 6.2 Dedupe strategy (important)
 
-Sentinel.AI prevents duplicates using:
+sentinel prevents duplicates using:
 - **content hash** for “same file uploaded twice”
 - **source fingerprint** for upstream sources (e.g., `gdrive:<file_id>`)
 

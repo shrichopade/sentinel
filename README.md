@@ -1,4 +1,4 @@
-# Sentinel.AI — Drive Sync Backend Integration
+# sentinel — Drive Sync Backend Integration
 
 A Python (FastAPI) backend integration that **syncs PDF/DOCX/TXT documents from a restricted Google Drive folder** into a **Supabase (Postgres) database**, so downstream services can search, analyse, and take actions on the content.
 
@@ -10,13 +10,13 @@ This tool solves the “admin debt” problem of manually tracking contracts and
 
 High-level view of how user-facing surfaces, the intelligence engine (FastAPI + orchestrator + specialist agents), data and retrieval (ingestion, hybrid RAG, memory), and external integrations fit together.
 
-![Sentinel.AI solution architecture](docs/solution-architecture.png)
+![sentinel solution architecture](docs/solution-architecture.png)
 
 ### Logical technical architecture
 
 Layered view of the stack: UI → FastAPI gateway → orchestrator and sub-agents → guardrails → RAG (ingestion + hybrid retrieval) → memory → MCP/tools → Supabase and pgvector storage.
 
-![Sentinel.AI logical technical architecture](docs/logical-technical-architecture.png)
+![sentinel logical technical architecture](docs/logical-technical-architecture.png)
 
 ---
 

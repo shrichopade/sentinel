@@ -1,4 +1,4 @@
-# requirements.txt — Python dependencies for Sentinel.AI backend
+# requirements.txt — Python dependencies for sentinel backend
 # Install from repository root with:
 #   pip install -r docs/requirements.txt
 #

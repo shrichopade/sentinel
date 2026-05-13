@@ -1,4 +1,4 @@
-# Sentinel.AI — Day 4 Solution Design
+# sentinel — Day 4 Solution Design
 
 **Document purpose:** This file describes what Day 4 adds on top of Day 3: long-term memory, Google Drive sync, and an always-on monitoring loop that creates user-visible alerts/actions.
 
@@ -8,7 +8,7 @@
 
 ## 1. Executive summary (plain English)
 
-Day 4 turns Sentinel.AI from a “one-off analyser” into an **ongoing personal compliance assistant** by adding (a) long-term memory, (b) Drive ingestion as an always-on source, and (c) monitoring that automatically detects deadlines and creates user-visible queue items.
+Day 4 turns sentinel from a “one-off analyser” into an **ongoing personal compliance assistant** by adding (a) long-term memory, (b) Drive ingestion as an always-on source, and (c) monitoring that automatically detects deadlines and creates user-visible queue items.
 
 In one sentence: **The system remembers what matters, watches for new documents + deadlines, and proactively raises actions for the user to approve.**
 

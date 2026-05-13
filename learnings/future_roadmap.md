@@ -1,6 +1,6 @@
-## Future Roadmap — making Sentinel.AI consumer-ready (commercial + production)
+## Future Roadmap — making sentinel consumer-ready (commercial + production)
 
-This roadmap lists **business/product features** and **technical capabilities** needed to ship Sentinel.AI to real end consumers (not just a local demo). It’s written to match the current architecture: FastAPI backend, Supabase Postgres/pgvector, React UI, Claude (agents), Voyage (embeddings), Drive ingestion, and HITL action queue.
+This roadmap lists **business/product features** and **technical capabilities** needed to ship sentinel to real end consumers (not just a local demo). It’s written to match the current architecture: FastAPI backend, Supabase Postgres/pgvector, React UI, Claude (agents), Voyage (embeddings), Drive ingestion, and HITL action queue.
 
 ---
 

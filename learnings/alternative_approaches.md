@@ -1,11 +1,11 @@
 # Alternative technical approaches (top 5)
 
-This notes **five credible ways** Sentinel.AI could have been built differently, focusing on **agentic AI**, **orchestration**, **MCP/tooling**, **observability**, **guardrails**, and **skills/modules**. Each option includes pros/cons and how it would change the product compared to our current FastAPI + Supabase + pgvector + custom orchestrator/skills approach.
+This notes **five credible ways** sentinel could have been built differently, focusing on **agentic AI**, **orchestration**, **MCP/tooling**, **observability**, **guardrails**, and **skills/modules**. Each option includes pros/cons and how it would change the product compared to our current FastAPI + Supabase + pgvector + custom orchestrator/skills approach.
 
 ## 1) LangGraph (LangChain) for orchestration + tool routing
 **What it is**: A graph/state-machine framework for agent workflows (nodes, edges, conditional routing), typically paired with LangChain tool abstractions.
 
-- **How it would change Sentinel.AI**
+- **How it would change sentinel**
   - Orchestrator becomes an explicit **graph** (e.g., `ingest → analyst → (research?) → risk → draft → action_create`), instead of a “loop until done” pattern.
   - “Skills” become **nodes** with typed inputs/outputs; retries and fallbacks become graph edges.
   - Tool calls (web search, DB, email) become standardized LangChain tools.
@@ -26,7 +26,7 @@ This notes **five credible ways** Sentinel.AI could have been built differently,
 ## 2) LlamaIndex for RAG + document ingestion + evaluation
 **What it is**: A RAG-first framework with ingestion pipelines, chunking strategies, retrieval/rerank components, and evaluation tooling.
 
-- **How it would change Sentinel.AI**
+- **How it would change sentinel**
   - Ingestion (parse → chunk → embed → store) could become a LlamaIndex pipeline with configurable chunkers and metadata extractors.
   - Retrieval could use built-in **query transforms**, **hybrid search**, **rerankers**, and **evaluation harnesses**.
   - Regulatory corpus could be a second index with routing (personal vs regulatory).
@@ -46,7 +46,7 @@ This notes **five credible ways** Sentinel.AI could have been built differently,
 ## 3) Semantic Kernel (Microsoft) for skills/plugins + planner
 **What it is**: A “skills” and “planner” oriented framework where capabilities are registered as functions and composed by a planner.
 
-- **How it would change Sentinel.AI**
+- **How it would change sentinel**
   - Our `backend/skills/*.py` map well to **Semantic Kernel skills** (first-class plugin functions).
   - The planner could choose which skills to call (analyst/research/risk/draft) based on the task.
 
@@ -65,7 +65,7 @@ This notes **five credible ways** Sentinel.AI could have been built differently,
 ## 4) Temporal / Durable orchestration for long-running reliable runs (AI-native “workflow engine”)
 **What it is**: A workflow engine (Temporal, Durable Functions, etc.) for reliable, resumable, observable long-running processes with retries and state persistence.
 
-- **How it would change Sentinel.AI**
+- **How it would change sentinel**
   - Each analysis becomes a durable workflow with steps persisted outside the app process.
   - “Continue analysis” becomes a **first-class resume** concept, not a custom endpoint.
   - Retries/backoff/rate-limit handling become workflow policies.
@@ -86,7 +86,7 @@ This notes **five credible ways** Sentinel.AI could have been built differently,
 ## 5) Dedicated observability + guardrails stack (Langfuse/LangSmith + Guardrails AI / NeMo Guardrails)
 **What it is**: Purpose-built platforms/libraries for LLM traces, prompt/version management, evaluations, red-teaming, and policy enforcement.
 
-- **How it would change Sentinel.AI**
+- **How it would change sentinel**
   - Every LLM call (analyst/research/risk/draft/chat) gets a **trace** with latency, tokens, prompt versions, and outputs.
   - Guardrails become policy objects (PII detection, refusal rules, citation requirements), not ad-hoc post-processing.
   - “Skills” can be versioned and A/B tested.
@@ -110,5 +110,5 @@ This notes **five credible ways** Sentinel.AI could have been built differently,
 - **Traditional**: API calls drive deterministic business logic; ML is “a service” called at the edges. Great for predictability, but struggles with open-ended tasks like interpreting contracts and drafting letters with citations.
 - **AI-native / agentic**: the “core” is a **reasoning loop** (or workflow graph) that plans and uses tools, and the system is judged on **traceability, grounding, and safe escalation**, not just CRUD correctness.
 
-For Sentinel.AI specifically, the most “AI-native” upgrades would be: **workflow orchestration (LangGraph/Temporal)** + **LLM observability (Langfuse/LangSmith)** + **schema-forced outputs** + **strong guardrails**. These changes mostly improve reliability and debuggability, at the cost of complexity and operational overhead.
+For sentinel specifically, the most “AI-native” upgrades would be: **workflow orchestration (LangGraph/Temporal)** + **LLM observability (Langfuse/LangSmith)** + **schema-forced outputs** + **strong guardrails**. These changes mostly improve reliability and debuggability, at the cost of complexity and operational overhead.
 

@@ -1,4 +1,4 @@
-# Sentinel.AI — Day 3 Solution Design
+# sentinel — Day 3 Solution Design
 
 **Document purpose:** This file describes what Day 3 adds on top of Day 2: safety guardrails, human approval controls, sending workflow, and audit visibility.
 

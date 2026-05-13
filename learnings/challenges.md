@@ -1,6 +1,6 @@
-# Challenges & Resolutions (Sentinel.AI — Day 1–5)
+# Challenges & Resolutions (sentinel — Day 1–5)
 
-This document captures the biggest challenges we hit while building Sentinel.AI and how we resolved them, in an interview-ready format.
+This document captures the biggest challenges we hit while building sentinel and how we resolved them, in an interview-ready format.
 
 ## 1) Functional — Orchestrator “classified but failed” / partial agent runs
 - **Problem**: A document could be ingested/classified, but the orchestrator would stop after the first tool (or not run at all), leaving the UI with missing reasoning/drafts.

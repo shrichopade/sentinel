@@ -1,7 +1,7 @@
-# ARCHITECTURE.md — Sentinel.AI (learning artefact)
+# ARCHITECTURE.md — sentinel (learning artefact)
 
 ## Section 1 — What it does (2–3 sentences)
-Sentinel.AI is a personal compliance and “admin debt” agent for people who have contracts, subscriptions, tenancy docs, and policy paperwork they struggle to track. You upload or sync documents, it extracts key obligations and risks, then drafts safe, reviewable actions (like cancellation or complaints) with sources. It is built for a single user workflow with human approval before anything is sent.
+sentinel is a personal compliance and “admin debt” agent for people who have contracts, subscriptions, tenancy docs, and policy paperwork they struggle to track. You upload or sync documents, it extracts key obligations and risks, then drafts safe, reviewable actions (like cancellation or complaints) with sources. It is built for a single user workflow with human approval before anything is sent.
 
 ## Section 2 — Architecture layers (1–2 sentences each)
 1. **Ingestion pipeline** — Accepts PDF/TXT → extracts raw text → classifies domain/type/vendor → chunks → embeds → stores `documents` + `chunks` + `obligations` in Supabase.
